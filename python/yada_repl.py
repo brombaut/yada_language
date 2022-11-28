@@ -1,6 +1,6 @@
 import os
 
-from lexer import Lexer
+from yada_lexer import Lexer
 from yada_token import TokenEnum
 
 PROMPT = ">>"

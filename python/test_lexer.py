@@ -2,7 +2,7 @@ from typing import List, Dict
 import pytest
 
 from yada_token import TokenEnum, Token
-from lexer import Lexer
+from yada_lexer import Lexer
 
 
 def test_next_token():
