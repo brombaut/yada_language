@@ -1,7 +1,7 @@
 from typing import List
 from yada_lexer import Lexer
 from yada_token import Token, TokenEnum
-from yada_ast import Program, Statement, LetStatement, Identifier
+from yada_ast import Program, Statement, LetStatement, Identifier, ReturnStatement
 
 class Parser():
     lexer: Lexer
@@ -32,6 +32,8 @@ class Parser():
     def _parse_statement(self) -> Statement | None:
         if self.curr_token.type == TokenEnum.LET:
             return self._parse_let_statement()
+        if self.curr_token.type == TokenEnum.RETURN:
+            return self._parse_return_statement()
         else:
             return None
 
@@ -46,6 +48,14 @@ class Parser():
         while not self._curr_token_is(TokenEnum.SEMICOLON):
             self.next_token()
         return LetStatement(let_token, let_ident, None)
+
+    def _parse_return_statement(self) -> ReturnStatement | None:
+        return_token = self.curr_token
+        self.next_token()
+        # TODO: Skipping the expressions until we get a semicolon
+        while not self._curr_token_is(TokenEnum.SEMICOLON):
+            self.next_token()
+        return ReturnStatement(return_token, None)
 
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t
