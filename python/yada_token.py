@@ -44,7 +44,7 @@ class Token:
     type: TokenEnum
     literal: str
 
-    def __init__(self, type, literal):
+    def __init__(self, type: TokenEnum, literal: str):
         self.type = type
         self.literal = literal
 
