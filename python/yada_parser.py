@@ -1,18 +1,38 @@
-from typing import List
+from enum import Enum
+from typing import Callable, Dict, List
 from yada_lexer import Lexer
 from yada_token import Token, TokenEnum
-from yada_ast import Program, Statement, LetStatement, Identifier, ReturnStatement
+from yada_ast import Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Expression
 
+class ParsePrecedence(Enum):
+    LOWEST = 0
+    EQUALS = 1 # ==
+    LESSGREATER = 2 # < or >
+    SUM = 3 # +
+    PRODUCT = 4 # *
+    PREFIX = 5 # -X or !X
+    CALL = 6 # foo(X)
 class Parser():
     lexer: Lexer
+    errors: List[str]
+
     curr_token: Token
     peek_token: Token
-    errors: List[str]
+
+    prefix_parse_fns: Dict[TokenEnum, Callable]
+    infix_parse_fns: Dict[TokenEnum, Callable]
+
 
     def __init__(self, lexer: Lexer):
         self.lexer = lexer
         self.curr_token, self.peek_token = None, None
         self.errors = []
+        
+        self.prefix_parse_fns = dict()
+        self._register_prefix(TokenEnum.IDENT, self._parse_identifier)
+
+        self.infix_parse_fns = dict()
+
         self.next_token()
         self.next_token()
 
@@ -32,10 +52,10 @@ class Parser():
     def _parse_statement(self) -> Statement | None:
         if self.curr_token.type == TokenEnum.LET:
             return self._parse_let_statement()
-        if self.curr_token.type == TokenEnum.RETURN:
+        elif self.curr_token.type == TokenEnum.RETURN:
             return self._parse_return_statement()
         else:
-            return None
+            return self._parse_expression_statement()
 
     def _parse_let_statement(self) -> LetStatement | None:
         let_token = self.curr_token
@@ -57,6 +77,23 @@ class Parser():
             self.next_token()
         return ReturnStatement(return_token, None)
 
+    def _parse_expression_statement(self) -> ExpressionStatement | None:
+        expression_statement_token = self.curr_token
+        expression_statement = self._parse_expression(ParsePrecedence.LOWEST)
+        if self._peek_token_is(TokenEnum.SEMICOLON):
+            self.next_token()
+        return ExpressionStatement(expression_statement_token, expression_statement)
+
+    def _parse_expression(self, precendence: ParsePrecedence) -> Expression | None:
+        prefix = self.prefix_parse_fns[self.curr_token.type]
+        if not prefix:
+            return None
+        left_exp = prefix()
+        return left_exp
+    
+    def _parse_identifier(self) -> Identifier:
+        return Identifier(self.curr_token, self.curr_token.literal)
+
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t
 
@@ -73,3 +110,9 @@ class Parser():
 
     def _peek_error(self, t: TokenEnum):
         self.errors.append(f"Expected next token to be {t}, got {self.peek_token.type} instead")
+
+    def _register_prefix(self, token_type: TokenEnum, fn: Callable):
+        self.prefix_parse_fns[token_type] = fn
+
+    def _register_infix(self, token_type: TokenEnum, fn: Callable):
+        self.infix_parse_fns[token_type] = fn
