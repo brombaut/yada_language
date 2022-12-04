@@ -1,7 +1,7 @@
 # Yada Language
 
 ## Project Short Term Goals
-- [~] Get PoC of interpreter of base programming language in Python.
+- [ ] Get PoC of interpreter of base programming language in Python.
 - [ ] Modify the frontent to fit with my own vision of the semantics of Yada.
 - [ ] Implement compiler version in Python.
 
