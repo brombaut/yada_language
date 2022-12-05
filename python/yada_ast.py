@@ -98,3 +98,17 @@ class ExpressionStatement(Statement):
 
     def string(self) -> str:
         return self.expression.string() if self.expression else ""
+
+class IntegerLiteral(Expression):
+    token: Token
+    value: int
+
+    def __init__(self, token: Token, value: int):
+        self.token = token
+        self.value = value
+    
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        return self.token.literal

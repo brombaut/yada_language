@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Callable, Dict, List
 from yada_lexer import Lexer
 from yada_token import Token, TokenEnum
-from yada_ast import Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Expression
+from yada_ast import Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Expression, IntegerLiteral
 
 class ParsePrecedence(Enum):
     LOWEST = 0
@@ -30,6 +30,7 @@ class Parser():
         
         self.prefix_parse_fns = dict()
         self._register_prefix(TokenEnum.IDENT, self._parse_identifier)
+        self._register_prefix(TokenEnum.INT, self._parse_integer_literal)
 
         self.infix_parse_fns = dict()
 
@@ -93,6 +94,15 @@ class Parser():
     
     def _parse_identifier(self) -> Identifier:
         return Identifier(self.curr_token, self.curr_token.literal)
+
+    def _parse_integer_literal(self) -> Expression | None:
+        integer_literal_token = self.curr_token
+        try:
+            value = int(integer_literal_token.literal)
+        except:
+            self.errors.append(f"could not parse {integer_literal_token.literal} as integer")
+            return None
+        return IntegerLiteral(integer_literal_token, value)
 
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t

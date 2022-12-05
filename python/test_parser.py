@@ -1,7 +1,7 @@
 
 from yada_lexer import Lexer
 from yada_parser import Parser
-from yada_ast import Program, Statement, LetStatement, ReturnStatement, ExpressionStatement, Identifier
+from yada_ast import Program, Statement, LetStatement, ReturnStatement, ExpressionStatement, Identifier, IntegerLiteral
 
 def check_parse_errors(p: Parser):
     errors = p.errors
@@ -68,3 +68,21 @@ def test_identifier_expression():
     assert isinstance(ident, Identifier), f"expression_stmt.expression is not an Identifier, got={type(ident)}"
     assert ident.value == "foobar", f"ident.value not foobar, got={ident.value}"
     assert ident.token_literal() == "foobar", f"ident.token_literal() not foobar, got={ident.token_literal()}"
+
+
+def test_integer_literal_expression():
+    input = "5;"
+    
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    literal = stmt.expression
+    assert isinstance(literal, IntegerLiteral), f"expression_stmt.expression is not an IntegerLiteral, got={type(literal)}"
+    assert literal.value == 5, f"ident.value not 5, got={literal.value}"
+    assert literal.token_literal() == "5", f"ident.token_literal() not 5, got={literal.token_literal()}"
+
