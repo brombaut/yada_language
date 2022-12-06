@@ -94,9 +94,11 @@ class Lexer:
         return self.inp[position:self.position]
 
     def _is_letter(self, char: str) -> bool:
-        return ('a' <= char and char <= 'z') or \
-            ('A' <= char and char <= 'Z') or \
+        return char and (
+            ('a' <= char and char <= 'z') or
+            ('A' <= char and char <= 'Z') or
             char == '_'
+        )
 
     def _new_token(self, token_type: TokenEnum, char: str) -> Token:
         return Token(token_type, char)
@@ -113,4 +115,4 @@ class Lexer:
         return self.inp[position:self.position]
 
     def _is_digit(self, char: str) -> bool:
-        return '0' <= char and char <= '9'
+        return char and ('0' <= char and char <= '9')

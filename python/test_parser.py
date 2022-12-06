@@ -1,4 +1,5 @@
 
+from typing import List
 from yada_lexer import Lexer
 from yada_parser import Parser
 import yada_ast as ast
@@ -89,21 +90,19 @@ def test_integer_literal_expression():
 
 
 def test_parsing_prefix_expressions():
-    prefix_tests = [
-        {
-            "input": "!5;",
-            "operator": "!",
-            "integer_value": 5
-        },
-                {
-            "input": "-15;",
-            "operator": "-",
-            "integer_value": 15
-        }
+    class PrefixTest:
+        def __init__(self, input, operator, integer_value):
+            self.input: str = input
+            self.operator: str = operator
+            self.integer_value: int = integer_value
+    
+    prefix_tests: List[PrefixTest] = [
+        PrefixTest("!5;", "!", 5),
+        PrefixTest("-15;", "-", 15)
     ]
 
     for pt in prefix_tests:
-        lexer = Lexer(pt['input'])
+        lexer = Lexer(pt.input)
         parser = Parser(lexer)
         program: ast.Program = parser.parse_program()
         check_parse_errors(parser)
@@ -113,11 +112,74 @@ def test_parsing_prefix_expressions():
         assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
         exp = stmt.expression
         assert isinstance(exp, ast.PrefixExpression), f"expression_stmt.expression is not a PrefixExpression, got={type(exp)}"
-        assert exp.operator == pt['operator'], f"exp.operator is not {pt['operator']}. got={exp.operator}"
-        _test_integer_literal(exp.right, pt['integer_value'])
+        assert exp.operator == pt.operator, f"exp.operator is not {pt.operator}. got={exp.operator}"
+        _test_integer_literal(exp.right, pt.integer_value)
 
+def test_parsing_infix_expressions():
+    class InfixTest:
+        def __init__(self, input, left_value, operator, right_value):
+            self.input: str = input
+            self.left_value: int = left_value
+            self.operator: str = operator
+            self.right_value: int = right_value
+
+    infix_tests: List[InfixTest] = [
+        InfixTest("5 + 5;", 5, "+", 5),
+        InfixTest("5 - 5;", 5, "-", 5),
+        InfixTest("5 * 5;", 5, "*", 5),
+        InfixTest("5 / 5;", 5, "/", 5),
+        InfixTest("5 > 5;", 5, ">", 5),
+        InfixTest("5 < 5;", 5, "<", 5),
+        InfixTest("5 == 5;", 5, "==", 5),
+        InfixTest("5 != 5;", 5, "!=", 5),
+    ]
+
+    for it in infix_tests:
+        lexer = Lexer(it.input)
+        parser = Parser(lexer)
+        program: ast.Program = parser.parse_program()
+        check_parse_errors(parser)
+
+        assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+        stmt = program.statements[0]
+        assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+        exp = stmt.expression
+        assert isinstance(exp, ast.InfixExpression), f"expression_stmt.expression is not a InfixExpression, got={type(exp)}"
+        _test_integer_literal(exp.left, it.left_value)
+        assert exp.operator == it.operator, f"exp.operator is not {it.operator}. got={exp.operator}"
+        _test_integer_literal(exp.right, it.right_value)
 
 def _test_integer_literal(il: ast.Expression, value: int) -> bool:
     assert isinstance(il, ast.IntegerLiteral), f"il is not an IntegerLiteral, got={type(il)}"
     assert il.value == value, f"il.value not {value}. got={il.value}"
     assert il.token_literal() == f"{value}", f"il.token_literal() not {value}, got={il.token_literal()}"
+
+def test_operator_precedence_parsing():
+    class OperatorPrecedenceTest():
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: str = expected
+
+    operator_precedence_tests: List[OperatorPrecedenceTest] = [
+        OperatorPrecedenceTest("-a * b", "((-a) * b)"),
+        OperatorPrecedenceTest("!-a", "(!(-a))"),
+        OperatorPrecedenceTest("a + b + c", "((a + b) + c)"),
+        OperatorPrecedenceTest("a + b - c", "((a + b) - c)"),
+        OperatorPrecedenceTest("a * b * c", "((a * b) * c)"),
+        OperatorPrecedenceTest("a * b / c", "((a * b) / c)"),
+        OperatorPrecedenceTest("a + b / c", "(a + (b / c))"),
+        OperatorPrecedenceTest("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        OperatorPrecedenceTest("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        OperatorPrecedenceTest("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+        OperatorPrecedenceTest("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+        OperatorPrecedenceTest("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
+    ]
+
+    for opt in operator_precedence_tests:
+        lexer = Lexer(opt.input)
+        parser = Parser(lexer)
+        program: ast.Program = parser.parse_program()
+        check_parse_errors(parser)
+
+        actual = program.string()
+        assert actual == opt.expected, f"expected={opt.expected}, got={actual}"
