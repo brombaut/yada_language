@@ -113,7 +113,7 @@ def test_parsing_prefix_expressions():
         exp = stmt.expression
         assert isinstance(exp, ast.PrefixExpression), f"expression_stmt.expression is not a PrefixExpression, got={type(exp)}"
         assert exp.operator == pt.operator, f"exp.operator is not {pt.operator}. got={exp.operator}"
-        _test_integer_literal(exp.right, pt.integer_value)
+        _test_literal_expression(exp.right, pt.integer_value)
 
 def test_parsing_infix_expressions():
     class InfixTest:
@@ -144,15 +144,7 @@ def test_parsing_infix_expressions():
         stmt = program.statements[0]
         assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
         exp = stmt.expression
-        assert isinstance(exp, ast.InfixExpression), f"expression_stmt.expression is not a InfixExpression, got={type(exp)}"
-        _test_integer_literal(exp.left, it.left_value)
-        assert exp.operator == it.operator, f"exp.operator is not {it.operator}. got={exp.operator}"
-        _test_integer_literal(exp.right, it.right_value)
-
-def _test_integer_literal(il: ast.Expression, value: int) -> bool:
-    assert isinstance(il, ast.IntegerLiteral), f"il is not an IntegerLiteral, got={type(il)}"
-    assert il.value == value, f"il.value not {value}. got={il.value}"
-    assert il.token_literal() == f"{value}", f"il.token_literal() not {value}, got={il.token_literal()}"
+        _test_infix_expression(exp, it.left_value, it.operator,it.right_value)
 
 def test_operator_precedence_parsing():
     class OperatorPrecedenceTest():
@@ -183,3 +175,31 @@ def test_operator_precedence_parsing():
 
         actual = program.string()
         assert actual == opt.expected, f"expected={opt.expected}, got={actual}"
+
+def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
+    assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"
+    assert _test_literal_expression(exp.left, left)
+    assert exp.operator == operator, f"exp.operator is not {operator}, got={exp.operator}"
+    assert _test_literal_expression(exp.right, right)
+    return True
+
+def _test_literal_expression(exp: ast.Expression, expected: str | int) -> bool:
+    if type(expected) == int:
+        return _test_integer_literal(exp, expected)
+    elif type(expected) == str:
+        return _test_identifier(exp, expected)
+    else:
+        raise Exception(f"type of exp not handled. got={type(expected)}")
+
+def _test_integer_literal(il: ast.Expression, value: int) -> bool:
+    assert isinstance(il, ast.IntegerLiteral), f"il is not an IntegerLiteral, got={type(il)}"
+    assert il.value == value, f"il.value not {value}. got={il.value}"
+    assert il.token_literal() == f"{value}", f"il.token_literal() not {value}, got={il.token_literal()}"
+    return True
+
+def _test_identifier(ident: ast.Expression, value: str) -> bool:
+    assert isinstance(ident, ast.Identifier), f"ident is not an Identifier, got={type(ident)}"
+    assert ident.value == value, f"ident.value not {value}. got={ident.value}"
+    assert ident.token_literal() == f"{value}", f"ident.token_literal() not {value}, got={ident.token_literal()}"
+    return True
+
