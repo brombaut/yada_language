@@ -49,6 +49,7 @@ class Parser():
         self._register_prefix(TokenEnum.TRUE, self._parse_boolean)
         self._register_prefix(TokenEnum.FALSE, self._parse_boolean)
         self._register_prefix(TokenEnum.LPAREN, self._parse_grouped_expression)
+        self._register_prefix(TokenEnum.IF, self._parse_if_expression)
 
         self.infix_parse_fns = dict()
         self._register_infix(TokenEnum.PLUS, self._parse_infix_expression)
@@ -166,6 +167,36 @@ class Parser():
         if not self._expect_peek(TokenEnum.RPAREN):
             return None
         return exp
+    
+    def _parse_if_expression(self) -> ast.Expression | None:
+        token = self.curr_token
+        if not self._expect_peek(TokenEnum.LPAREN):
+            return None
+        self.next_token()
+        condition = self._parse_expression(ParsePrecedence.LOWEST)
+        if not self._expect_peek(TokenEnum.RPAREN):
+            return None
+        if not self._expect_peek(TokenEnum.LBRACE):
+            return None
+        consequence = self._parse_block_statement()
+        alternative = None
+        if self._peek_token_is(TokenEnum.ELSE):
+            self.next_token()
+            if not self._expect_peek(TokenEnum.LBRACE):
+                return None
+            alternative = self._parse_block_statement()
+        return ast.IfExpression(token, condition, consequence, alternative)
+
+    def _parse_block_statement(self) -> ast.BlockStatement:
+        token = self.curr_token
+        statements: List[ast.Statement] = []
+        self.next_token()
+        while not self._curr_token_is(TokenEnum.RBRACE) and not self._curr_token_is(TokenEnum.EOF):
+            stmt = self._parse_statement()
+            if stmt:
+                statements.append(stmt)
+            self.next_token()
+        return ast.BlockStatement(token, statements)
 
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t

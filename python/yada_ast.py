@@ -160,3 +160,41 @@ class InfixExpression(Expression):
 
     def string(self) -> str:
         return f"({self.left.string()} {self.operator} {self.right.string()})"
+
+class BlockStatement(Statement):
+    token: Token
+    statements: List[Statement]
+
+    def __init__(self, token: Token, statements: List[Statement]):
+        self.token = token
+        self.statements = statements
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        result = ""
+        for s in self.statements:
+            result += s.string()
+        return result
+
+class IfExpression(Expression):
+    token: Token
+    condition: Expression
+    consequence: BlockStatement
+    alternative: BlockStatement | None
+
+    def __init__(self, token: Token, condition: Expression, consequence: BlockStatement, alternative: BlockStatement):
+        self.token = token
+        self.condition = condition
+        self.consequence = consequence
+        self.alternative = alternative
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        result = f"if {self.condition.string()} {self.consequence.string()}"
+        if self.alternative:
+            result += f" else {self.alternative.string()}"
+        return result

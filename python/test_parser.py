@@ -208,6 +208,55 @@ def test_operator_precedence_parsing():
         actual = program.string()
         assert actual == opt.expected, f"expected={opt.expected}, got={actual}"
 
+def test_if_expression():
+    input = "if (x < y) { x }"
+    
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    if_exp = stmt.expression
+    assert isinstance(if_exp, ast.IfExpression), f"stmt.exp is not a IfExpression, got={type(if_exp)}"
+    if not _test_infix_expression(if_exp.condition, "x", "<", "y"):
+        return
+    assert len(if_exp.consequence.statements) == 1, f"if_exp.consequence does not contain 1 statement. got={len(if_exp.consequence.statements)}"
+    consequence = if_exp.consequence.statements[0]
+    assert isinstance(consequence, ast.ExpressionStatement), f"consequence is not a ExpressionStatement, got={type(consequence)}"
+    if not _test_identifier(consequence.expression, "x"):
+        return
+    assert not if_exp.alternative, f"if_exp.alternative was not None, got={if_exp.alternative}"
+
+def test_if_else_expression():
+    input = "if (x < y) { x } else { y }"
+    
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    if_else_exp = stmt.expression
+    assert isinstance(if_else_exp, ast.IfExpression), f"stmt.exp is not a IfExpression, got={type(if_else_exp)}"
+    if not _test_infix_expression(if_else_exp.condition, "x", "<", "y"):
+        return
+    assert len(if_else_exp.consequence.statements) == 1, f"if_exp.consequence does not contain 1 statement. got={len(if_else_exp.consequence.statements)}"
+    consequence = if_else_exp.consequence.statements[0]
+    assert isinstance(consequence, ast.ExpressionStatement), f"consequence is not a ExpressionStatement, got={type(consequence)}"
+    if not _test_identifier(consequence.expression, "x"):
+        return
+    assert if_else_exp.alternative, f"if_else_exp.alternative was None, got={if_else_exp.alternative}"
+    assert len(if_else_exp.alternative.statements) == 1, f"if_exp.alternative does not contain 1 statement. got={len(if_else_exp.consequence.statements)}"
+    alternative = if_else_exp.alternative.statements[0]
+    assert isinstance(alternative, ast.ExpressionStatement), f"alternative is not a ExpressionStatement, got={type(alternative)}"
+    if not _test_identifier(alternative.expression, "y"):
+        return
+
 def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
     assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"
     assert _test_literal_expression(exp.left, left)
