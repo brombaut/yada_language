@@ -13,45 +13,58 @@ def check_parse_errors(p: Parser):
         print(f"\t{e}")
     assert len(errors) == 0, f"parser has {len(errors)} errors"
 
-def test_let_statement():
-    input = """
-    let x = 5;
-    let y = 10;
-    let foobar = 838383;
-    """
+def test_let_statements():
+    class LetStatementTest:
+        def __init__(self, input, expected_identifier, expected_value):
+            self.input: str = input
+            self.expected_identifier: str = expected_identifier
+            self.expected_value = expected_value
+    
+    let_statement_tests: List[LetStatementTest] = [
+        LetStatementTest("let x = 5;", "x", 5),
+        LetStatementTest("let y = true;", "y", True),
+        LetStatementTest("let foobar = y;", "foobar", "y"),
+    ]
 
-    lexer = Lexer(input)
-    parser = Parser(lexer)
-    program: ast.Program = parser.parse_program()
-    check_parse_errors(parser)
-    assert program is not None, "parse_program returned None"
-    assert len(program.statements) == 3, f"program.statements does not contain 3 statements. got={len(program.statements)}"
+    for lst in let_statement_tests:
+        lexer = Lexer(lst.input)
+        parser = Parser(lexer)
+        program: ast.Program = parser.parse_program()
+        check_parse_errors(parser)
 
-    expected_identifiers = ["x", "y", "foobar"]
-    for i, ei in enumerate(expected_identifiers):
-        stmt = program.statements[i]
-        assert stmt.token_literal() == "let", f"stmt.token_literal not 'let', got={stmt.token_literal()}"
+        assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+        stmt = program.statements[0]
+        if not _test_let_statement(stmt, lst.expected_identifier):
+            return
         assert isinstance(stmt, ast.LetStatement), f"stmt is not a LetStatement, got={type(stmt)}"
-        assert stmt.name.value == ei, f"let_stmt.name.value not {ei}, got={stmt.name.value}"
-        assert stmt.name.token_literal() == ei, f"let_stmt.name.token_literal() not {ei}, got={stmt.name.token_literal()}"
+        val = stmt.value
+        if not _test_literal_expression(val, lst.expected_value):
+            return
 
+def test_return_statements():
+    class ReturnStatementTest:
+        def __init__(self, input, expected_value):
+            self.input: str = input
+            self.expected_value = expected_value
+    
+    return_statement_tests: List[ReturnStatementTest] = [
+        ReturnStatementTest("return 5;", 5),
+        ReturnStatementTest("return true;", True),
+        ReturnStatementTest("return foobar;", "foobar"),
+    ]
 
-def test_return_statement():
-    input = """
-    return 5;
-    return 10;
-    return 993322;
-    """
+    for rst in return_statement_tests:
+        lexer = Lexer(rst.input)
+        parser = Parser(lexer)
+        program: ast.Program = parser.parse_program()
+        check_parse_errors(parser)
 
-    lexer = Lexer(input)
-    parser = Parser(lexer)
-    program: ast.Program = parser.parse_program()
-    check_parse_errors(parser)
-
-    assert len(program.statements) == 3, f"program.statements does not contain 3 statements. got={len(program.statements)}"
-    for stmt in program.statements:
-        assert isinstance(stmt, ast.ReturnStatement), f"stmt is not a ReturnStatement, got={type(stmt)}"
-        assert stmt.token_literal() == "return", f"return_statement.token_literal not 'return', got={stmt.token_literal()}"
+        assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+        ret_stmt = program.statements[0]
+        assert isinstance(ret_stmt, ast.ReturnStatement), f"stmt is not a ReturnStatement, got={type(ret_stmt)}"
+        assert ret_stmt.token_literal() == "return", f"return_statement.token_literal not 'return', got={ret_stmt.token_literal()}"
+        if not _test_literal_expression(ret_stmt.return_value, rst.expected_value):
+            return
 
 
 def test_identifier_expression():
@@ -360,4 +373,10 @@ def _test_boolean(exp: ast.Expression, value: bool) -> bool:
     assert exp.value == value, f"bo.value not {value}. got={exp.value}"
     assert exp.token_literal() == (f"true" if value else "false"), f"exp.token_literal() not {value}, got={exp.token_literal()}"
     return True
+
+def _test_let_statement(stmt: ast.Statement, name: str):
+    assert stmt.token_literal() == "let", f"stmt.token_literal not 'let', got={stmt.token_literal()}"
+    assert isinstance(stmt, ast.LetStatement), f"stmt is not a LetStatement, got={type(stmt)}"
+    assert stmt.name.value == name, f"let_stmt.name.value not {name}, got={stmt.name.value}"
+    assert stmt.name.token_literal() == name, f"let_stmt.name.token_literal() not {name}, got={stmt.name.token_literal()}"
 

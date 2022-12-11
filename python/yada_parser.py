@@ -95,18 +95,19 @@ class Parser():
         let_ident = ast.Identifier(self.curr_token, self.curr_token.literal)
         if not self._expect_peek(TokenEnum.ASSIGN):
             return None
-        # TODO: Skipping the expressions until we get a semicolon
-        while not self._curr_token_is(TokenEnum.SEMICOLON):
+        self.next_token()
+        let_value = self._parse_expression(ParsePrecedence.LOWEST)
+        if self._peek_token_is(TokenEnum.SEMICOLON):
             self.next_token()
-        return ast.LetStatement(let_token, let_ident, None)
+        return ast.LetStatement(let_token, let_ident, let_value)
 
     def _parse_return_statement(self) -> ast.ReturnStatement | None:
         return_token = self.curr_token
         self.next_token()
-        # TODO: Skipping the expressions until we get a semicolon
-        while not self._curr_token_is(TokenEnum.SEMICOLON):
+        return_value = self._parse_expression(ParsePrecedence.LOWEST)
+        if self._peek_token_is(TokenEnum.SEMICOLON):
             self.next_token()
-        return ast.ReturnStatement(return_token, None)
+        return ast.ReturnStatement(return_token, return_value)
 
     def _parse_expression_statement(self) -> ast.ExpressionStatement | None:
         expression_statement_token = self.curr_token
