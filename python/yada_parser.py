@@ -50,6 +50,7 @@ class Parser():
         self._register_prefix(TokenEnum.FALSE, self._parse_boolean)
         self._register_prefix(TokenEnum.LPAREN, self._parse_grouped_expression)
         self._register_prefix(TokenEnum.IF, self._parse_if_expression)
+        self._register_prefix(TokenEnum.FUNCTION, self._parse_function_literal)
 
         self.infix_parse_fns = dict()
         self._register_infix(TokenEnum.PLUS, self._parse_infix_expression)
@@ -197,6 +198,33 @@ class Parser():
                 statements.append(stmt)
             self.next_token()
         return ast.BlockStatement(token, statements)
+
+    def _parse_function_literal(self) -> ast.Expression | None:
+        token = self.curr_token
+        if not self._expect_peek(TokenEnum.LPAREN):
+            return None
+        parameters = self._parse_function_parameters()
+        if not self._expect_peek(TokenEnum.LBRACE):
+            return None
+        body = self._parse_block_statement()
+        return ast.FunctionLiteral(token, parameters, body)
+
+    def _parse_function_parameters(self) -> List[ast.Identifier]:
+        identifiers: List[ast.Identifier] = list()
+        if self._peek_token_is(TokenEnum.RPAREN):
+            self.next_token()
+            return identifiers
+        self.next_token()
+        ident = ast.Identifier(self.curr_token, self.curr_token.literal)
+        identifiers.append(ident)
+        while self._peek_token_is(TokenEnum.COMMA):
+            self.next_token()
+            self.next_token()
+            ident = ast.Identifier(self.curr_token, self.curr_token.literal)
+            identifiers.append(ident)
+        if not self._expect_peek(TokenEnum.RPAREN):
+            return None
+        return identifiers
 
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t

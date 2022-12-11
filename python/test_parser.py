@@ -257,6 +257,53 @@ def test_if_else_expression():
     if not _test_identifier(alternative.expression, "y"):
         return
 
+def test_function_literal_parsing():
+    input = "fn(x, y) { x + y; }"
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    function = stmt.expression
+    assert isinstance(function, ast.FunctionLiteral), f"stmt.exp is not a FunctionLiteral, got={type(function)}"
+    assert len(function.parameters) == 2, f"function literal parameters wrong. want 2. got={len(function.parameters)}"
+    _test_literal_expression(function.parameters[0], "x")
+    _test_literal_expression(function.parameters[1], "y")
+    assert len(function.body.statements) == 1, f"function.body.statements has not 1 statement, got={len(function.body.statements)}"
+    body_stmt = function.body.statements[0]
+    assert isinstance(body_stmt, ast.ExpressionStatement), f"body_stmt is not a ExpressionStatement, got={type(body_stmt)}"
+    _test_infix_expression(body_stmt.expression, "x", "+", "y")
+
+def _test_function_parameter_parsing():
+    class FunctionParameterParsingTest():
+        def __init__(self, input, expected_params):
+            self.input: str = input
+            self.expected_params: List[str] = expected_params
+
+    function_parameter_parsing_tests: List[FunctionParameterParsingTest] = [
+        FunctionParameterParsingTest("fn(){}", []),
+        FunctionParameterParsingTest("fn(x){}", ["x"]),
+        FunctionParameterParsingTest("fn(x, y, z){}", ["x", "y", "z"]),
+    ]
+
+    for t in function_parameter_parsing_tests:
+        lexer = Lexer(input)
+        parser = Parser(lexer)
+        program: ast.Program = parser.parse_program()
+        check_parse_errors(parser)
+
+        assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+        stmt = program.statements[0]
+        assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+        function = stmt.expression
+        assert isinstance(function, ast.FunctionLiteral), f"stmt.exp is not a FunctionLiteral, got={type(function)}"
+        assert len(function.parameters) == len(t.expected_params), f"function literal parameters wrong. want={len(t.expected_params)}. got={len(function.parameters)}"
+        for i in range(len(t.expected_params)):
+            _test_literal_expression(function.parameters[i], t.expected_params[i])
+
 def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
     assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"
     assert _test_literal_expression(exp.left, left)
