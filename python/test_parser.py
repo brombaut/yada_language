@@ -114,7 +114,9 @@ def test_parsing_prefix_expressions():
     
     prefix_tests: List[PrefixTest] = [
         PrefixTest("!5;", "!", 5),
-        PrefixTest("-15;", "-", 15)
+        PrefixTest("-15;", "-", 15),
+        PrefixTest("!true;", "!", True),
+        PrefixTest("!false;", "!", False),
     ]
 
     for pt in prefix_tests:
@@ -135,9 +137,9 @@ def test_parsing_infix_expressions():
     class InfixTest:
         def __init__(self, input, left_value, operator, right_value):
             self.input: str = input
-            self.left_value: int = left_value
+            self.left_value: int | bool = left_value
             self.operator: str = operator
-            self.right_value: int = right_value
+            self.right_value: int | bool  = right_value
 
     infix_tests: List[InfixTest] = [
         InfixTest("5 + 5;", 5, "+", 5),
@@ -148,6 +150,9 @@ def test_parsing_infix_expressions():
         InfixTest("5 < 5;", 5, "<", 5),
         InfixTest("5 == 5;", 5, "==", 5),
         InfixTest("5 != 5;", 5, "!=", 5),
+        InfixTest("true == true;", True, "==", True),
+        InfixTest("true != false;", True, "!=", False),
+        InfixTest("false == false;", False, "==", False),
     ]
 
     for it in infix_tests:
@@ -160,7 +165,9 @@ def test_parsing_infix_expressions():
         stmt = program.statements[0]
         assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
         exp = stmt.expression
-        _test_infix_expression(exp, it.left_value, it.operator,it.right_value)
+
+        if not _test_infix_expression(exp, it.left_value, it.operator,it.right_value):
+            return
 
 def test_operator_precedence_parsing():
     class OperatorPrecedenceTest():
@@ -181,6 +188,10 @@ def test_operator_precedence_parsing():
         OperatorPrecedenceTest("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
         OperatorPrecedenceTest("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
         OperatorPrecedenceTest("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
+        OperatorPrecedenceTest("true", "true"),
+        OperatorPrecedenceTest("false", "false"),
+        OperatorPrecedenceTest("3 > 5 == false", "((3 > 5) == false)"),
+        OperatorPrecedenceTest("3 < 5 == true", "((3 < 5) == true)"),
     ]
 
     for opt in operator_precedence_tests:
@@ -204,6 +215,8 @@ def _test_literal_expression(exp: ast.Expression, expected: str | int) -> bool:
         return _test_integer_literal(exp, expected)
     elif type(expected) == str:
         return _test_identifier(exp, expected)
+    elif type(expected) == bool:
+        return _test_boolean(exp, expected)
     else:
         raise Exception(f"type of exp not handled. got={type(expected)}")
 
@@ -217,5 +230,11 @@ def _test_identifier(ident: ast.Expression, value: str) -> bool:
     assert isinstance(ident, ast.Identifier), f"ident is not an Identifier, got={type(ident)}"
     assert ident.value == value, f"ident.value not {value}. got={ident.value}"
     assert ident.token_literal() == f"{value}", f"ident.token_literal() not {value}, got={ident.token_literal()}"
+    return True
+
+def _test_boolean(exp: ast.Expression, value: bool) -> bool:
+    assert isinstance(exp, ast.Boolean), f"exp is not an Boolean, got={type(exp)}"
+    assert exp.value == value, f"bo.value not {value}. got={exp.value}"
+    assert exp.token_literal() == (f"true" if value else "false"), f"exp.token_literal() not {value}, got={exp.token_literal()}"
     return True
 
