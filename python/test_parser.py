@@ -277,7 +277,7 @@ def test_function_literal_parsing():
     assert isinstance(body_stmt, ast.ExpressionStatement), f"body_stmt is not a ExpressionStatement, got={type(body_stmt)}"
     _test_infix_expression(body_stmt.expression, "x", "+", "y")
 
-def _test_function_parameter_parsing():
+def test_function_parameter_parsing():
     class FunctionParameterParsingTest():
         def __init__(self, input, expected_params):
             self.input: str = input
@@ -290,7 +290,7 @@ def _test_function_parameter_parsing():
     ]
 
     for t in function_parameter_parsing_tests:
-        lexer = Lexer(input)
+        lexer = Lexer(t.input)
         parser = Parser(lexer)
         program: ast.Program = parser.parse_program()
         check_parse_errors(parser)
