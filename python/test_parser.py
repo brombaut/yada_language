@@ -88,6 +88,22 @@ def test_integer_literal_expression():
     assert literal.value == 5, f"ident.value not 5, got={literal.value}"
     assert literal.token_literal() == "5", f"ident.token_literal() not 5, got={literal.token_literal()}"
 
+def test_boolean_expression():
+    input = "true;"
+    
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    literal = stmt.expression
+    assert isinstance(literal, ast.Boolean), f"expression_stmt.expression is not a Boolean, got={type(literal)}"
+    assert literal.value == True, f"ident.value not true, got={literal.value}"
+    assert literal.token_literal() == "true", f"ident.token_literal() not true, got={literal.token_literal()}"
+
 
 def test_parsing_prefix_expressions():
     class PrefixTest:

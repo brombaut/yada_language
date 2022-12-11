@@ -46,6 +46,8 @@ class Parser():
         self._register_prefix(TokenEnum.INT, self._parse_integer_literal)
         self._register_prefix(TokenEnum.BANG, self._parse_prefix_expression)
         self._register_prefix(TokenEnum.MINUS, self._parse_prefix_expression)
+        self._register_prefix(TokenEnum.TRUE, self._parse_boolean)
+        self._register_prefix(TokenEnum.FALSE, self._parse_boolean)
 
         self.infix_parse_fns = dict()
         self._register_infix(TokenEnum.PLUS, self._parse_infix_expression)
@@ -138,6 +140,9 @@ class Parser():
             self.errors.append(f"could not parse {integer_literal_token.literal} as integer")
             return None
         return ast.IntegerLiteral(integer_literal_token, value)
+    
+    def _parse_boolean(self) -> ast.Expression | None:
+        return ast.Boolean(self.curr_token, self._curr_token_is(TokenEnum.TRUE))
 
     def _parse_prefix_expression(self) -> ast.Expression:
         token = self.curr_token
