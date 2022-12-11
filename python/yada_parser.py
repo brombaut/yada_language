@@ -48,6 +48,7 @@ class Parser():
         self._register_prefix(TokenEnum.MINUS, self._parse_prefix_expression)
         self._register_prefix(TokenEnum.TRUE, self._parse_boolean)
         self._register_prefix(TokenEnum.FALSE, self._parse_boolean)
+        self._register_prefix(TokenEnum.LPAREN, self._parse_grouped_expression)
 
         self.infix_parse_fns = dict()
         self._register_infix(TokenEnum.PLUS, self._parse_infix_expression)
@@ -158,6 +159,13 @@ class Parser():
         self.next_token()
         right = self._parse_expression(precedence)
         return ast.InfixExpression(token, left, operator, right)
+
+    def _parse_grouped_expression(self) -> ast.Expression | None:
+        self.next_token()
+        exp = self._parse_expression(ParsePrecedence.LOWEST)
+        if not self._expect_peek(TokenEnum.RPAREN):
+            return None
+        return exp
 
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t

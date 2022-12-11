@@ -192,6 +192,11 @@ def test_operator_precedence_parsing():
         OperatorPrecedenceTest("false", "false"),
         OperatorPrecedenceTest("3 > 5 == false", "((3 > 5) == false)"),
         OperatorPrecedenceTest("3 < 5 == true", "((3 < 5) == true)"),
+        OperatorPrecedenceTest("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
+        OperatorPrecedenceTest("(5 + 5) * 2", "((5 + 5) * 2)"),
+        OperatorPrecedenceTest("2 / (5 + 5)", "(2 / (5 + 5))"),
+        OperatorPrecedenceTest("-(5 + 5)", "(-(5 + 5))"),
+        OperatorPrecedenceTest("!(true == true)", "(!(true == true))"),
     ]
 
     for opt in operator_precedence_tests:
