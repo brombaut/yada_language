@@ -197,6 +197,9 @@ def test_operator_precedence_parsing():
         OperatorPrecedenceTest("2 / (5 + 5)", "(2 / (5 + 5))"),
         OperatorPrecedenceTest("-(5 + 5)", "(-(5 + 5))"),
         OperatorPrecedenceTest("!(true == true)", "(!(true == true))"),
+        OperatorPrecedenceTest("a + add(b * c) + d", "((a + add((b * c))) + d)"),
+        OperatorPrecedenceTest("add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"),
+        OperatorPrecedenceTest("add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"),
     ]
 
     for opt in operator_precedence_tests:
@@ -303,6 +306,25 @@ def test_function_parameter_parsing():
         assert len(function.parameters) == len(t.expected_params), f"function literal parameters wrong. want={len(t.expected_params)}. got={len(function.parameters)}"
         for i in range(len(t.expected_params)):
             _test_literal_expression(function.parameters[i], t.expected_params[i])
+
+def test_call_expression():
+    input = "add(1, 2 * 3, 4 + 5);"
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    call_exp = stmt.expression
+    assert isinstance(call_exp, ast.CallExpression), f"stmt.exp is not a CallExpression, got={type(call_exp)}"
+    if not _test_identifier(call_exp.function, "add"):
+        return
+    assert len(call_exp.arguments) == 3, f"wrong length of arguments. got={len(call_exp.arguments)}"
+    _test_literal_expression(call_exp.arguments[0], 1)
+    _test_infix_expression(call_exp.arguments[1], 2, "*", 3)
+    _test_infix_expression(call_exp.arguments[2], 4, "+", 5)
 
 def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
     assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"

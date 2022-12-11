@@ -214,4 +214,21 @@ class FunctionLiteral(Expression):
 
     def string(self) -> str:
         params = [p.string() for p in self.parameters]
-        return f"{self.token_literal()}({','.join(params)}) {self.body.string()}"
+        return f"{self.token_literal()}({', '.join(params)}) {self.body.string()}"
+
+class CallExpression(Expression):
+    token: Token
+    function: Expression # Identifier or Function Literal
+    arguments: List[Expression]
+
+    def __init__(self, token: Token, function: Expression, arguments: List[Expression]):
+        self.token = token
+        self.function = function
+        self.arguments = arguments
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        args = [a.string() for a in self.arguments]
+        return f"{self.function.string()}({', '.join(args)})"

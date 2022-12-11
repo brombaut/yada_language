@@ -23,6 +23,7 @@ PRECEDENCES = {
     TokenEnum.MINUS: ParsePrecedence.SUM,
     TokenEnum.SLASH: ParsePrecedence.PRODUCT,
     TokenEnum.ASTERISK: ParsePrecedence.PRODUCT,
+    TokenEnum.LPAREN: ParsePrecedence.CALL,
 }
 
 class Parser():
@@ -61,6 +62,7 @@ class Parser():
         self._register_infix(TokenEnum.NOT_EQ, self._parse_infix_expression)
         self._register_infix(TokenEnum.LT, self._parse_infix_expression)
         self._register_infix(TokenEnum.GT, self._parse_infix_expression)
+        self._register_infix(TokenEnum.LPAREN, self._parse_call_expression)
 
         self.next_token()
         self.next_token()
@@ -225,6 +227,26 @@ class Parser():
         if not self._expect_peek(TokenEnum.RPAREN):
             return None
         return identifiers
+
+    def _parse_call_expression(self, function: ast.Expression) -> ast.Expression:
+        token = self.curr_token
+        arguments = self._parse_call_arguments()
+        return ast.CallExpression(token, function, arguments)
+
+    def _parse_call_arguments(self) -> List[ast.Expression]:
+        args: List[ast.Expression] = list()
+        if self._peek_token_is(TokenEnum.RPAREN):
+            self.next_token()
+            return args
+        self.next_token()
+        args.append(self._parse_expression(ParsePrecedence.LOWEST))
+        while self._peek_token_is(TokenEnum.COMMA):
+            self.next_token()
+            self.next_token()
+            args.append(self._parse_expression(ParsePrecedence.LOWEST))
+        if not self._expect_peek(TokenEnum.RPAREN):
+            return None
+        return args
 
     def _curr_token_is(self, t: TokenEnum) -> bool:
         return self.curr_token.type == t
