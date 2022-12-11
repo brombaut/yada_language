@@ -1,6 +1,7 @@
 import os
 
 from yada_lexer import Lexer
+from yada_parser import Parser
 from yada_token import TokenEnum
 
 PROMPT = ">>"
@@ -21,11 +22,18 @@ def start():
         if not line:
             return
         l = Lexer(line)
-        tok = l.next_token()
-        while tok.type != TokenEnum.EOF:
-            print(tok)
-            tok = l.next_token()
-        
+        p = Parser(l)
+        program = p.parse_program()
+        if len(p.errors) != 0:
+            print_parser_errors(p.errors)
+            continue
+        print(program.string())
+        print()
+
+def print_parser_errors(errors):
+    print("ERROR: Paring errors:")
+    for e in errors:
+        print(f"\t{e}")        
 
 if __name__ == "__main__":
     main()
