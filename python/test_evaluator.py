@@ -21,6 +21,20 @@ def test_eval_integer_expression():
         evaluated = _test_eval(t.input)
         _test_integer_object(evaluated, t.expected)
 
+def test_eval_boolean_expression():
+    class EvalBooleanExpressionTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: bool = expected
+    eval_boolean_expression_tests: List[EvalBooleanExpressionTest] = [
+        EvalBooleanExpressionTest("true", True),
+        EvalBooleanExpressionTest("false", False),
+    ]
+
+    for t in eval_boolean_expression_tests:
+        evaluated = _test_eval(t.input)
+        _test_boolean_object(evaluated, t.expected)
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
@@ -29,6 +43,11 @@ def _test_eval(inp: str) -> obj.Object:
 
 def _test_integer_object(actual_obj: obj.Object, expected: int) -> bool:
     assert isinstance(actual_obj, obj.Integer), f"actual_obj is not Integer, got={type(actual_obj)}"
+    assert actual_obj.value == expected, f"actual_obj has wrong value. got={actual_obj.value}, want={expected}"
+    return True
+
+def _test_boolean_object(actual_obj: obj.Object, expected: bool) -> bool:
+    assert isinstance(actual_obj, obj.Boolean), f"actual_obj is not Boolean, got={type(actual_obj)}"
     assert actual_obj.value == expected, f"actual_obj has wrong value. got={actual_obj.value}, want={expected}"
     return True
 
