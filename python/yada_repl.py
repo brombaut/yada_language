@@ -3,6 +3,7 @@ import os
 from yada_lexer import Lexer
 from yada_parser import Parser
 from yada_token import TokenEnum
+from yada_evaluator import Eval
 
 PROMPT = ">>"
 
@@ -27,8 +28,12 @@ def start():
         if len(p.errors) != 0:
             print_parser_errors(p.errors)
             continue
-        print(program.string())
-        print()
+        # Print program ast style
+        # print(program.string())
+        evaluated = Eval(program)
+        if evaluated:
+            print(evaluated.inspect())
+            print()
 
 def print_parser_errors(errors):
     print("ERROR: Paring errors:")
