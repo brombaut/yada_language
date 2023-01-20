@@ -15,6 +15,8 @@ def test_eval_integer_expression():
     eval_integer_expression_tests: List[EvalIntegerExpressionTest] = [
         EvalIntegerExpressionTest("5", 5),
         EvalIntegerExpressionTest("10", 10),
+        EvalIntegerExpressionTest("-5", -5),
+        EvalIntegerExpressionTest("-10", -10),
     ]
 
     for t in eval_integer_expression_tests:
@@ -32,6 +34,24 @@ def test_eval_boolean_expression():
     ]
 
     for t in eval_boolean_expression_tests:
+        evaluated = _test_eval(t.input)
+        _test_boolean_object(evaluated, t.expected)
+
+def test_bang_operator():
+    class EvalBangOperatorTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: bool = expected
+    tests: List[EvalBangOperatorTest] = [
+        EvalBangOperatorTest("!true", False),
+        EvalBangOperatorTest("!false", True),
+        EvalBangOperatorTest("!5", False),
+        EvalBangOperatorTest("!!true", True),
+        EvalBangOperatorTest("!!false", False),
+        EvalBangOperatorTest("!!5", True),
+    ]
+
+    for t in tests:
         evaluated = _test_eval(t.input)
         _test_boolean_object(evaluated, t.expected)
 
