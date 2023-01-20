@@ -4,6 +4,7 @@ from typing import Callable, Dict, List
 
 TRUE = obj.Boolean(True)
 FALSE = obj.Boolean(False)
+NULL = obj.Null
 
 def Eval(node: ast.Node) -> obj.Object:
     node_type = type(node)
