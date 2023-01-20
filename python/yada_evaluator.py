@@ -21,6 +21,10 @@ def Eval(node: ast.Node) -> obj.Object:
     elif node_type == ast.PrefixExpression:
         right = Eval(node.right)
         return eval_prefix_expression(node.operator, right)
+    elif node_type == ast.InfixExpression:
+        left = Eval(node.left)
+        right = Eval(node.right)
+        return eval_infix_expression(node.operator, left, right)
     return None
 
 def eval_statements(stmts: List[ast.Statement]) -> obj.Object:
@@ -41,6 +45,16 @@ def eval_prefix_expression(operator: str, right: obj.Object) -> obj.Object:
         return eval_minus_prefix_operator_expression(right)
     else:
         return NULL
+
+def eval_infix_expression(operator: str, left: obj.Object, right: obj.Object) -> obj.Object:
+    if left.type() == obj.ObjectTypeEnum.INTEGER_OBJ and right.type() == obj.ObjectTypeEnum.INTEGER_OBJ:
+        return eval_integer_infix_expression(operator, left, right)
+    elif operator == "==":
+        return native_bool_to_boolean_object(left == right)
+    elif operator == "!=":
+        return native_bool_to_boolean_object(left != right)
+    else:
+        return NULL
     
 def eval_bang_operator_expression(right: obj.Object) -> obj.Object:
     if right == TRUE:
@@ -53,7 +67,29 @@ def eval_bang_operator_expression(right: obj.Object) -> obj.Object:
         return FALSE
 
 def eval_minus_prefix_operator_expression(right: obj.Object) -> obj.Object:
-    if type(right) != obj.Integer:
+    if right.type() != obj.ObjectTypeEnum.INTEGER_OBJ:
         return NULL
     value = right.value
     return obj.Integer(-value)
+
+def eval_integer_infix_expression(operator: str, left: obj.Integer, right: obj.Integer) -> obj.Object:
+    left_val = left.value
+    right_val = right.value
+    if operator == "+":
+        return obj.Integer(left_val + right_val)
+    elif operator == "-":
+        return obj.Integer(left_val - right_val)
+    elif operator == "*":
+        return obj.Integer(left_val * right_val)
+    elif operator == "/":
+        return obj.Integer(left_val / right_val)
+    elif operator == "<":
+        return native_bool_to_boolean_object(left_val < right_val)
+    elif operator == ">":
+        return native_bool_to_boolean_object(left_val > right_val)
+    elif operator == "==":
+        return native_bool_to_boolean_object(left_val == right_val)
+    elif operator == "!=":
+        return native_bool_to_boolean_object(left_val != right_val)
+    else:
+        return NULL

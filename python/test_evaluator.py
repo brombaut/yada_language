@@ -17,6 +17,17 @@ def test_eval_integer_expression():
         EvalIntegerExpressionTest("10", 10),
         EvalIntegerExpressionTest("-5", -5),
         EvalIntegerExpressionTest("-10", -10),
+        EvalIntegerExpressionTest("5 + 5 + 5 + 5 - 10", 10),
+        EvalIntegerExpressionTest("2 * 2 * 2 * 2 * 2", 32),
+        EvalIntegerExpressionTest("-50 + 100 + -50", 0),
+        EvalIntegerExpressionTest("5 * 2 + 10", 20),
+        EvalIntegerExpressionTest("5 + 2 * 10", 25),
+        EvalIntegerExpressionTest("20 + 2 * -10", 0),
+        EvalIntegerExpressionTest("50 / 2 * 2 + 10", 60),
+        EvalIntegerExpressionTest("2 * (5 + 10)", 30),
+        EvalIntegerExpressionTest("3 * 3 * 3 + 10", 37),
+        EvalIntegerExpressionTest("3 * (3 * 3) + 10", 37),
+        EvalIntegerExpressionTest("(5 + 10 * 2 + 15 / 3) * 2 + -10", 50),
     ]
 
     for t in eval_integer_expression_tests:
@@ -31,6 +42,23 @@ def test_eval_boolean_expression():
     eval_boolean_expression_tests: List[EvalBooleanExpressionTest] = [
         EvalBooleanExpressionTest("true", True),
         EvalBooleanExpressionTest("false", False),
+        EvalBooleanExpressionTest("1 < 2", True),
+        EvalBooleanExpressionTest("1 > 2", False),
+        EvalBooleanExpressionTest("1 < 1", False),
+        EvalBooleanExpressionTest("1 > 1", False),
+        EvalBooleanExpressionTest("1 == 1", True),
+        EvalBooleanExpressionTest("1 != 1", False),
+        EvalBooleanExpressionTest("1 == 2", False),
+        EvalBooleanExpressionTest("1 != 2", True),
+        EvalBooleanExpressionTest("true == true", True),
+        EvalBooleanExpressionTest("false == false", True),
+        EvalBooleanExpressionTest("true == false", False),
+        EvalBooleanExpressionTest("true != false", True),
+        EvalBooleanExpressionTest("true == true", True),
+        EvalBooleanExpressionTest("(1 < 2) == true", True),
+        EvalBooleanExpressionTest("(1 < 2) == false", False),
+        EvalBooleanExpressionTest("(1 > 2) == true", False),
+        EvalBooleanExpressionTest("(1 > 2) == false", True),
     ]
 
     for t in eval_boolean_expression_tests:
