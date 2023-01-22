@@ -10,14 +10,16 @@ def Eval(node: ast.Node) -> obj.Object:
     node_type = type(node)
     # Statements
     if node_type == ast.Program:
-        return eval_statements(node.statements)
+        return eval_program(node)
     elif node_type == ast.ExpressionStatement:
         return Eval(node.expression)
     elif node_type == ast.BlockStatement:
-        return eval_statements(node.statements)
+        return eval_block_statement(node)
     elif node_type == ast.IfExpression:
         return eval_if_expression(node)
-    # Expressions
+    elif node_type == ast.ReturnStatement:
+        val = Eval(node.return_value)
+        return obj.ReturnValue(val)
     elif node_type == ast.IntegerLiteral:
         return obj.Integer(node.value)
     elif node_type == ast.Boolean:
@@ -31,11 +33,32 @@ def Eval(node: ast.Node) -> obj.Object:
         return eval_infix_expression(node.operator, left, right)
     return None
 
+def eval_program(program: ast.Program) -> obj.Object:
+    result: obj.Object
+    for statement in program.statements:
+        result = Eval(statement)
+        if type(result) == obj.ReturnValue:
+            return result.value
+    return result
+
+
 def eval_statements(stmts: List[ast.Statement]) -> obj.Object:
     result = obj.Object()
     for statement in stmts:
         result = Eval(statement)
+
+        if type(result) == obj.ReturnValue:
+            return result.value
     return result
+
+def eval_block_statement(block: ast.BlockStatement) -> obj.Object:
+    result = obj.Object()
+    for statement in block.statements:
+        result = Eval(statement)
+        if result and result.type() == obj.ObjectTypeEnum.RETURN_VALUE_OBJ:
+            return result
+    return result
+
 
 def native_bool_to_boolean_object(input: bool) -> obj.Boolean:
     if input:

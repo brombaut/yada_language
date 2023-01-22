@@ -106,6 +106,31 @@ def test_if_else_expressions():
         else:
             _test_null_object(evaluated)
 
+def test_return_statements():
+    class EvalReturnStatementTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: int = expected
+    tests: List[EvalReturnStatementTest] = [
+        EvalReturnStatementTest("return 10", 10),
+        EvalReturnStatementTest("return 10; 9;", 10),
+        EvalReturnStatementTest("return 2 * 5; 9;", 10),
+        EvalReturnStatementTest("9; return 2 * 5; 9;", 10),
+        EvalReturnStatementTest("""
+        if (10 > 1) {
+            if (10 > 1) {
+                return 10;
+            }
+            return 1;
+        }
+        """, 10),
+
+    ]
+
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        _test_integer_object(evaluated, t.expected)
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
