@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 from yada_evaluator import Eval
 from yada_lexer import Lexer
 from yada_parser import Parser
@@ -83,6 +83,29 @@ def test_bang_operator():
         evaluated = _test_eval(t.input)
         _test_boolean_object(evaluated, t.expected)
 
+
+def test_if_else_expressions():
+    class EvalIfElseExpressionTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: Any = expected
+    tests: List[EvalIfElseExpressionTest] = [
+        EvalIfElseExpressionTest("if (true) { 10 }", 10),
+        EvalIfElseExpressionTest("if (false) { 10 }", None),
+        EvalIfElseExpressionTest("if (q) { 10 }", 10),
+        EvalIfElseExpressionTest("if (1 < 2) { 10 }", 10),
+        EvalIfElseExpressionTest("if (1 > 2) { 10 }", None),
+        EvalIfElseExpressionTest("if (1 > 2) { 10 } else { 20 }", 20),
+        EvalIfElseExpressionTest("if (1 < 2) { 10 } else { 20 }", 10),
+    ]
+
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        if type(t.expected) == int:
+            _test_integer_object(evaluated, t.expected)
+        else:
+            _test_null_object(evaluated)
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
@@ -97,5 +120,9 @@ def _test_integer_object(actual_obj: obj.Object, expected: int) -> bool:
 def _test_boolean_object(actual_obj: obj.Object, expected: bool) -> bool:
     assert isinstance(actual_obj, obj.Boolean), f"actual_obj is not Boolean, got={type(actual_obj)}"
     assert actual_obj.value == expected, f"actual_obj has wrong value. got={actual_obj.value}, want={expected}"
+    return True
+
+def _test_null_object(actual_obj: obj.Object) -> bool:
+    assert actual_obj is None, f"actual_obj is not None, got={type(actual_obj)}"
     return True
 

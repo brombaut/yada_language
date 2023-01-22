@@ -13,6 +13,10 @@ def Eval(node: ast.Node) -> obj.Object:
         return eval_statements(node.statements)
     elif node_type == ast.ExpressionStatement:
         return Eval(node.expression)
+    elif node_type == ast.BlockStatement:
+        return eval_statements(node.statements)
+    elif node_type == ast.IfExpression:
+        return eval_if_expression(node)
     # Expressions
     elif node_type == ast.IntegerLiteral:
         return obj.Integer(node.value)
@@ -93,3 +97,22 @@ def eval_integer_infix_expression(operator: str, left: obj.Integer, right: obj.I
         return native_bool_to_boolean_object(left_val != right_val)
     else:
         return NULL
+
+def eval_if_expression(ie: ast.IfExpression) -> obj.Object:
+    condition = Eval(ie.condition)
+    if is_truthy(condition):
+        return Eval(ie.consequence)
+    elif ie.alternative is not None:
+        return Eval(ie.alternative)
+    else:
+        return None
+
+def is_truthy(m_obj: obj.Object) -> bool:
+    if m_obj == NULL:
+        return False
+    elif m_obj == TRUE:
+        return True
+    elif m_obj == FALSE:
+        return False
+    else:
+        return True
