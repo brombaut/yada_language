@@ -131,6 +131,35 @@ def test_return_statements():
         evaluated = _test_eval(t.input)
         _test_integer_object(evaluated, t.expected)
 
+
+def test_return_statements():
+    class EvalErrorHandlingTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: str = expected
+    tests: List[EvalErrorHandlingTest] = [
+        EvalErrorHandlingTest("5 + true;", "type mismatch: ObjectTypeEnum.INTEGER_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("5 + true; 5;", "type mismatch: ObjectTypeEnum.INTEGER_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("-true;", "unknown operator: -ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("true + false;", "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("5; true + false; 5", "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("if (10 > 1) { true + false; }", "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("""
+        if (10 > 1) {
+            if (10 > 1) {
+                return true + false;
+            }
+            return 1;
+        }
+        """, "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+    ]
+
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        assert type(evaluated) == obj.Error, f"No error object returned. got={type(evaluated)}"
+        assert evaluated.message == t.expected, f"wrong error message. expected={t.expected}, got={evaluated.message}"
+
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
