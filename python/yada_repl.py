@@ -3,6 +3,7 @@ import os
 from yada_lexer import Lexer
 from yada_parser import Parser
 from yada_token import TokenEnum
+from yada_object import new_environment
 from yada_evaluator import Eval
 
 PROMPT = ">>"
@@ -17,6 +18,7 @@ def main():
     start()
 
 def start():
+    env = new_environment()
     while True:
         print(PROMPT, end=" ")
         line = input()
@@ -30,7 +32,7 @@ def start():
             continue
         # Print program ast style
         # print(program.string())
-        evaluated = Eval(program)
+        evaluated = Eval(program, env)
         if evaluated:
             print(evaluated.inspect())
             print()

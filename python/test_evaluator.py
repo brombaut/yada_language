@@ -92,7 +92,7 @@ def test_if_else_expressions():
     tests: List[EvalIfElseExpressionTest] = [
         EvalIfElseExpressionTest("if (true) { 10 }", 10),
         EvalIfElseExpressionTest("if (false) { 10 }", None),
-        EvalIfElseExpressionTest("if (q) { 10 }", 10),
+        EvalIfElseExpressionTest("if (1) { 10 }", 10),
         EvalIfElseExpressionTest("if (1 < 2) { 10 }", 10),
         EvalIfElseExpressionTest("if (1 > 2) { 10 }", None),
         EvalIfElseExpressionTest("if (1 > 2) { 10 } else { 20 }", 20),
@@ -132,7 +132,7 @@ def test_return_statements():
         _test_integer_object(evaluated, t.expected)
 
 
-def test_return_statements():
+def test_error_handling():
     class EvalErrorHandlingTest:
         def __init__(self, input, expected):
             self.input: str = input
@@ -152,6 +152,7 @@ def test_return_statements():
             return 1;
         }
         """, "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
+        EvalErrorHandlingTest("foobar", "identifier not found: foobar"),
     ]
 
     for t in tests:
@@ -159,12 +160,28 @@ def test_return_statements():
         assert type(evaluated) == obj.Error, f"No error object returned. got={type(evaluated)}"
         assert evaluated.message == t.expected, f"wrong error message. expected={t.expected}, got={evaluated.message}"
 
+def test_let_statements():
+    class EvalLetStatementTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: int = expected
+    tests: List[EvalLetStatementTest] = [
+        EvalLetStatementTest("let a = 5; a;", 5),
+        EvalLetStatementTest("let a = 5 * 5; a;", 25),
+        EvalLetStatementTest("let a = 5; let b = a; b;", 5),
+        EvalLetStatementTest("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+    ]
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        _test_integer_object(evaluated, t.expected)
+
 
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
     program: ast.Program = parser.parse_program()
-    return Eval(program)
+    env: obj.Environment = obj.new_environment()
+    return Eval(program, env)
 
 def _test_integer_object(actual_obj: obj.Object, expected: int) -> bool:
     assert isinstance(actual_obj, obj.Integer), f"actual_obj is not Integer, got={type(actual_obj)}"

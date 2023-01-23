@@ -6,26 +6,35 @@ TRUE = obj.Boolean(True)
 FALSE = obj.Boolean(False)
 NULL = obj.Null
 
-def Eval(node: ast.Node) -> obj.Object:
+def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
     node_type = type(node)
     # Statements
     if node_type == ast.Program:
-        return eval_program(node)
+        return eval_program(node, env)
     
     elif node_type == ast.ExpressionStatement:
-        return Eval(node.expression)
+        return Eval(node.expression, env)
     
     elif node_type == ast.BlockStatement:
-        return eval_block_statement(node)
+        return eval_block_statement(node, env)
     
     elif node_type == ast.IfExpression:
-        return eval_if_expression(node)
+        return eval_if_expression(node, env)
     
     elif node_type == ast.ReturnStatement:
-        val = Eval(node.return_value)
+        val = Eval(node.return_value, env)
         if (is_error(val)):
             return val
         return obj.ReturnValue(val)
+
+    elif node_type == ast.LetStatement:
+        val = Eval(node.value, env)
+        if (is_error(val)):
+            return val
+        env.set(node.name.value, val)
+
+    elif node_type == ast.Identifier:
+        return eval_identifier(node, env)
     
     elif node_type == ast.IntegerLiteral:
         return obj.Integer(node.value)
@@ -34,26 +43,26 @@ def Eval(node: ast.Node) -> obj.Object:
         return native_bool_to_boolean_object(node.value)
     
     elif node_type == ast.PrefixExpression:
-        right = Eval(node.right)
+        right = Eval(node.right, env)
         if (is_error(right)):
             return right
         return eval_prefix_expression(node.operator, right)
     
     elif node_type == ast.InfixExpression:
-        left = Eval(node.left)
+        left = Eval(node.left, env)
         if (is_error(left)):
             return left
-        right = Eval(node.right)
+        right = Eval(node.right, env)
         if (is_error(right)):
             return right
         return eval_infix_expression(node.operator, left, right)
     
     return None
 
-def eval_program(program: ast.Program) -> obj.Object:
+def eval_program(program: ast.Program, env: obj.Environment) -> obj.Object:
     result: obj.Object
     for statement in program.statements:
-        result = Eval(statement)
+        result = Eval(statement, env)
         # result_type = type(result)
         if result:
             result_type = result.type()
@@ -63,20 +72,20 @@ def eval_program(program: ast.Program) -> obj.Object:
                 return result
     return result
 
-
-def eval_statements(stmts: List[ast.Statement]) -> obj.Object:
+# TODO: Is this used?
+def eval_statements(stmts: List[ast.Statement], env: obj.Environment) -> obj.Object:
     result = obj.Object()
     for statement in stmts:
-        result = Eval(statement)
+        result = Eval(statement, env)
 
         if type(result) == obj.ReturnValue:
             return result.value
     return result
 
-def eval_block_statement(block: ast.BlockStatement) -> obj.Object:
+def eval_block_statement(block: ast.BlockStatement, env: obj.Environment) -> obj.Object:
     result = obj.Object()
     for statement in block.statements:
-        result = Eval(statement)
+        result = Eval(statement, env)
         if result:
             result_type = result.type()
             if result_type == obj.ObjectTypeEnum.RETURN_VALUE_OBJ or result_type == obj.ObjectTypeEnum.ERROR_OBJ:
@@ -147,16 +156,23 @@ def eval_integer_infix_expression(operator: str, left: obj.Integer, right: obj.I
     else:
         return new_error(f"unknown operator: {left.type()} {operator} {right.type()}")
 
-def eval_if_expression(ie: ast.IfExpression) -> obj.Object:
-    condition = Eval(ie.condition)
+def eval_if_expression(ie: ast.IfExpression, env: obj.Environment) -> obj.Object:
+    condition = Eval(ie.condition, env)
     if (is_error(condition)):
             return condition
     if is_truthy(condition):
-        return Eval(ie.consequence)
+        return Eval(ie.consequence, env)
     elif ie.alternative is not None:
-        return Eval(ie.alternative)
+        return Eval(ie.alternative, env)
     else:
         return None
+
+def eval_identifier(node: ast.Identifier, env: obj.Environment) -> obj.Object:
+    try:
+        val = env.get(node.value)
+    except:
+        return new_error(f"identifier not found: {node.value}")
+    return val
 
 def is_truthy(m_obj: obj.Object) -> bool:
     if m_obj == NULL:

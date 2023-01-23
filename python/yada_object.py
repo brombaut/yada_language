@@ -79,3 +79,22 @@ class Error(Object):
 
     def inspect(self) -> str:
         return f"ERROR: {self.message}"
+
+
+class Environment():
+    store: dict[str, Object]
+
+    def __init__(self, store: dict[str, Object]):
+        self.store = store
+    
+    def get(self, name: str) -> Object:
+        if name not in self.store:
+            raise "TODO"
+        return self.store[name]
+
+    def set(self, name: str, val: Object) -> Object:
+        self.store[name] = val
+        return val
+
+def new_environment() -> Environment:
+    return Environment(dict())
