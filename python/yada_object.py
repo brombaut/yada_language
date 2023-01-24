@@ -1,5 +1,6 @@
 from abc import ABC
-
+from typing import List
+import yada_ast as ast
 from enum import Enum
 
 class ObjectTypeEnum(Enum):
@@ -7,7 +8,8 @@ class ObjectTypeEnum(Enum):
     BOOLEAN_OBJ = "BOOLEAN"
     NULL_OBJ = "NULL"
     RETURN_VALUE_OBJ = "RETURN_VALUE"
-    ERROR_OBJ = "OBJ"
+    ERROR_OBJ = "ERROR"
+    FUNCTION_OBJ = "FUNCTION"
 
 
 class Object(ABC):
@@ -83,18 +85,52 @@ class Error(Object):
 
 class Environment():
     store: dict[str, Object]
+    outer: any # : Environment
 
-    def __init__(self, store: dict[str, Object]):
+    def __init__(self, store: dict[str, Object], outer: any):
         self.store = store
+        self.outer = outer
     
     def get(self, name: str) -> Object:
-        if name not in self.store:
+        if name in self.store:
+            return self.store[name]
+        elif self.outer:
+            # Will raise if not there
+            return self.outer.get(name)
+        else:
+            # No outer env
             raise "TODO"
-        return self.store[name]
 
     def set(self, name: str, val: Object) -> Object:
         self.store[name] = val
         return val
 
+def new_enclosed_environment(outer: Environment) -> Environment:
+    env = new_environment()
+    env.outer = outer
+    return env
+
 def new_environment() -> Environment:
-    return Environment(dict())
+    store = dict()
+    outer_env = None
+    return Environment(store, outer_env)
+
+
+
+
+class Function(Object):
+    parameters: List[ast.Identifier]
+    body: ast.BlockStatement
+    env: Environment
+
+    def __init__(self, parameters: List[ast.Identifier], body: ast.BlockStatement, env: Environment):
+        self.parameters = parameters
+        self.body = body
+        self.env = env
+
+    def type(self) -> str:
+        return ObjectTypeEnum.FUNCTION_OBJ
+
+    def inspect(self) -> str:
+        params = [p.string for p in self.parameters]
+        return f"fn({','.join(params)}) {{ \n{self.body.string()}\n}}"

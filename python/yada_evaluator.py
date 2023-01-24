@@ -33,6 +33,20 @@ def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
             return val
         env.set(node.name.value, val)
 
+    elif node_type == ast.FunctionLiteral:
+        params = node.parameters
+        body = node.body
+        return obj.Function(params, body, env)
+
+    elif node_type == ast.CallExpression:
+        function = Eval(node.function, env)
+        if (is_error(function)):
+            return function
+        args: List[obj.Object] = eval_expressions(node.arguments, env)
+        if len(args) == 1 and is_error(args[0]):
+            return args[0]
+        return apply_function(function, args)
+
     elif node_type == ast.Identifier:
         return eval_identifier(node, env)
     
@@ -93,10 +107,14 @@ def eval_block_statement(block: ast.BlockStatement, env: obj.Environment) -> obj
     return result
 
 
-def native_bool_to_boolean_object(input: bool) -> obj.Boolean:
-    if input:
-        return TRUE
-    return FALSE
+def eval_expressions(exps: List[ast.Expression], env: obj.Environment) -> List[obj.Object]:
+    result: List[obj.Object()] = []
+    for e in exps:
+        evaluated = Eval(e, env)
+        if is_error(evaluated):
+            return [obj.Object(evaluated)]
+        result.append(evaluated)
+    return result
 
 def eval_prefix_expression(operator: str, right: obj.Object) -> obj.Object:
     if operator == "!":
@@ -173,6 +191,29 @@ def eval_identifier(node: ast.Identifier, env: obj.Environment) -> obj.Object:
     except:
         return new_error(f"identifier not found: {node.value}")
     return val
+
+def apply_function(fn: obj.Object, args: List[obj.Object]) -> obj.Object:
+    if type(fn) is not obj.Function:
+        raise Exception(f"not a function: {fn.type()}")
+    extended_env = extend_function_env(fn, args)
+    evaluated = Eval(fn.body, extended_env)
+    return unwrap_return_value(evaluated)
+    
+def extend_function_env(fn: obj.Object, args: List[obj.Object]) -> obj.Environment:
+    env = obj.new_enclosed_environment(fn.env)
+    for param_idx, param in enumerate(fn.parameters):
+        env.set(param.value, args[param_idx])
+    return env
+
+def unwrap_return_value(m_obj: obj.Object) -> obj.Object:
+    if type(m_obj) == obj.ReturnValue:
+        return m_obj.value
+    return m_obj
+
+def native_bool_to_boolean_object(input: bool) -> obj.Boolean:
+    if input:
+        return TRUE
+    return FALSE
 
 def is_truthy(m_obj: obj.Object) -> bool:
     if m_obj == NULL:

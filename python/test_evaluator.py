@@ -176,6 +176,45 @@ def test_let_statements():
         _test_integer_object(evaluated, t.expected)
 
 
+def test_function_object():
+    input = "fn(x) { x + 2; };"
+
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, obj.Function), f"object is not Function. got={type(evaluated)}"
+    assert len(evaluated.parameters) == 1, f"function has wrong parameters. Parameters={evaluated.parameters}"
+    assert evaluated.parameters[0].string() == "x", f"parameter is not x. got={evaluated.parameters[0].string()}"
+    expected_body = "(x + 2)"
+    assert evaluated.body.string() == expected_body, f"body is not {expected_body}. got={evaluated.body.string()}"
+
+def test_function_application():
+    class EvalFunctionTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: int = expected
+    tests: List[EvalFunctionTest] = [
+        EvalFunctionTest("let identity = fn(x) { x; }; identity(5);", 5),
+        EvalFunctionTest("let identity = fn(x) { return x; }; identity(5);", 5),
+        EvalFunctionTest("let double = fn(x) { x * 2; }; double(5);", 10),
+        EvalFunctionTest("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+        EvalFunctionTest("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
+        EvalFunctionTest("fn(x) { x; }(5)", 5),
+    ]
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        _test_integer_object(evaluated, t.expected)
+
+def test_closures():
+    input = """
+        let newAdder = fn(x) {
+            fn(y) { x + y };
+        };
+        let addTwo = newAdder(2);
+        addTwo(2);
+    """
+    expected = 4
+    evaluated = _test_eval(input)
+    _test_integer_object(evaluated, expected)
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
