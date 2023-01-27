@@ -117,6 +117,21 @@ def test_boolean_expression():
     assert literal.value == True, f"ident.value not true, got={literal.value}"
     assert literal.token_literal() == "true", f"ident.token_literal() not true, got={literal.token_literal()}"
 
+def test_string_literal_expression():
+    input = '"hello world";'
+    
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    literal = stmt.expression
+    assert isinstance(literal, ast.StringLiteral), f"expression_stmt.expression is not a StringLiteral, got={type(literal)}"
+    assert literal.value == "hello world", f'ident.value not "hello world", got={literal.value}'
+
 
 def test_parsing_prefix_expressions():
     class PrefixTest:

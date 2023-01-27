@@ -232,3 +232,17 @@ class CallExpression(Expression):
     def string(self) -> str:
         args = [a.string() for a in self.arguments]
         return f"{self.function.string()}({', '.join(args)})"
+
+class StringLiteral(Expression):
+    token: Token
+    value: str
+
+    def __init__(self, token: Token, value: str):
+        self.token = token
+        self.value = value
+    
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        return self.token.literal
