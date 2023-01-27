@@ -153,6 +153,7 @@ def test_error_handling():
         }
         """, "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
         EvalErrorHandlingTest("foobar", "identifier not found: foobar"),
+        EvalErrorHandlingTest('"Hello" - "World"', "unknown operator: ObjectTypeEnum.STRING_OBJ - ObjectTypeEnum.STRING_OBJ"),
     ]
 
     for t in tests:
@@ -217,6 +218,12 @@ def test_closures():
 
 def test_string_literal():
     input = '"Hello World!"'
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, obj.String), f"evaluated object is not String, got={type(evaluated)}"
+    assert evaluated.value == 'Hello World!', f"String has wrong value, got={evaluated.value}"
+
+def test_string_concatenation():
+    input = '"Hello" + " " + "World!"'
     evaluated = _test_eval(input)
     assert isinstance(evaluated, obj.String), f"evaluated object is not String, got={type(evaluated)}"
     assert evaluated.value == 'Hello World!', f"String has wrong value, got={evaluated.value}"

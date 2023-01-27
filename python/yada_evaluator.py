@@ -130,6 +130,8 @@ def eval_prefix_expression(operator: str, right: obj.Object) -> obj.Object:
 def eval_infix_expression(operator: str, left: obj.Object, right: obj.Object) -> obj.Object:
     if left.type() == obj.ObjectTypeEnum.INTEGER_OBJ and right.type() == obj.ObjectTypeEnum.INTEGER_OBJ:
         return eval_integer_infix_expression(operator, left, right)
+    elif left.type() == obj.ObjectTypeEnum.STRING_OBJ and right.type() == obj.ObjectTypeEnum.STRING_OBJ:
+        return eval_string_infix_expression(operator, left, right)
     elif operator == "==":
         return native_bool_to_boolean_object(left == right)
     elif operator == "!=":
@@ -176,6 +178,13 @@ def eval_integer_infix_expression(operator: str, left: obj.Integer, right: obj.I
         return native_bool_to_boolean_object(left_val != right_val)
     else:
         return new_error(f"unknown operator: {left.type()} {operator} {right.type()}")
+
+def eval_string_infix_expression(operator: str, left: obj.String, right: obj.String) -> obj.Object:
+    if operator != "+":
+        return new_error(f"unknown operator: {left.type()} {operator} {right.type()}")
+    left_val = left.value
+    right_val = right.value
+    return obj.String(left_val + right_val)
 
 def eval_if_expression(ie: ast.IfExpression, env: obj.Environment) -> obj.Object:
     condition = Eval(ie.condition, env)
