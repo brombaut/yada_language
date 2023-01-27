@@ -24,6 +24,8 @@ def test_next_token():
 
     10 == 10;
     10 != 9;
+    "foobar"
+    "foo bar"
     """
 
     expected_tokens: List[Token] = [
@@ -103,6 +105,9 @@ def test_next_token():
         Token(TokenEnum.NOT_EQ, "!="),
         Token(TokenEnum.INT, "9"),
         Token(TokenEnum.SEMICOLON, ";"),
+
+        Token(TokenEnum.STRING, "foobar"),
+        Token(TokenEnum.STRING, "foo bar"),
 
         Token(TokenEnum.EOF, "")
     ]

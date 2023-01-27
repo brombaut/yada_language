@@ -7,6 +7,7 @@ class TokenEnum(Enum):
     # Identifiers + Literals
     IDENT = "IDENT"
     INT = "INT"
+    STRING = "STRING"
     
     # Operators
     ASSIGN = "="

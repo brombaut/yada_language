@@ -22,10 +22,13 @@ class Lexer:
                 tok = self._new_token(TokenEnum.EQ, literal)
             else:
                 tok = self._new_token(TokenEnum.ASSIGN, self.char)
+        
         elif self.char == '+':
             tok = self._new_token(TokenEnum.PLUS, self.char)
+        
         elif self.char == '-':
             tok = self._new_token(TokenEnum.MINUS, self.char)
+        
         elif self.char == '!':
             if self._peek_char() == "=":
                 c = self.char
@@ -34,28 +37,42 @@ class Lexer:
                 tok = self._new_token(TokenEnum.NOT_EQ, literal)
             else:
                 tok = self._new_token(TokenEnum.BANG, self.char)
+        
         elif self.char == '/':
             tok = self._new_token(TokenEnum.SLASH, self.char)
+        
         elif self.char == '*':
             tok = self._new_token(TokenEnum.ASTERISK, self.char)
+        
         elif self.char == '<':
             tok = self._new_token(TokenEnum.LT, self.char)
+        
         elif self.char == '>':
             tok = self._new_token(TokenEnum.GT, self.char)
+        
         elif self.char == ';':
             tok = self._new_token(TokenEnum.SEMICOLON, self.char)
+        
         elif self.char == ',':
             tok = self._new_token(TokenEnum.COMMA, self.char)
+        
         elif self.char == '(':
             tok = self._new_token(TokenEnum.LPAREN, self.char)
+        
         elif self.char == ')':
             tok = self._new_token(TokenEnum.RPAREN, self.char)
+        
         elif self.char == '{':
             tok = self._new_token(TokenEnum.LBRACE, self.char)
+        
         elif self.char == '}':
             tok = self._new_token(TokenEnum.RBRACE, self.char)
+        
+        elif self.char == '"':
+            tok = self._new_token(TokenEnum.STRING, self._read_string())
         elif not self.char:
             tok = self._new_token(TokenEnum.EOF, '')
+        
         else:
             if self._is_letter(self.char):
                 ident = self._read_identifier()
@@ -116,3 +133,10 @@ class Lexer:
 
     def _is_digit(self, char: str) -> bool:
         return char and ('0' <= char and char <= '9')
+
+    def _read_string(self) -> str:
+        position = self.position + 1
+        self._read_char()
+        while self.char and self.char != "\"":
+            self._read_char()
+        return self.inp[position:self.position]
