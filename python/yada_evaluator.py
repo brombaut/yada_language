@@ -55,6 +55,9 @@ def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
     
     elif node_type == ast.Boolean:
         return native_bool_to_boolean_object(node.value)
+
+    elif node_type == ast.StringLiteral:
+        return obj.String(node.value)
     
     elif node_type == ast.PrefixExpression:
         right = Eval(node.right, env)

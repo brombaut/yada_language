@@ -215,6 +215,12 @@ def test_closures():
     evaluated = _test_eval(input)
     _test_integer_object(evaluated, expected)
 
+def test_string_literal():
+    input = '"Hello World!"'
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, obj.String), f"evaluated object is not String, got={type(evaluated)}"
+    assert evaluated.value == 'Hello World!', f"String has wrong value, got={evaluated.value}"
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)

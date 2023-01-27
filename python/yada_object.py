@@ -10,6 +10,7 @@ class ObjectTypeEnum(Enum):
     RETURN_VALUE_OBJ = "RETURN_VALUE"
     ERROR_OBJ = "ERROR"
     FUNCTION_OBJ = "FUNCTION"
+    STRING_OBJ = "STRING"
 
 
 class Object(ABC):
@@ -45,6 +46,18 @@ class Boolean(Object):
             return "true"
         else:
             return "false"
+
+class String(Object):
+    value: str
+
+    def __init__(self, value: str):
+        self.value = value
+    
+    def type(self) -> str:
+        return ObjectTypeEnum.STRING_OBJ
+
+    def inspect(self) -> str:
+        return self.value
 
 class Null(Object):
     value: bool
