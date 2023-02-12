@@ -228,6 +228,27 @@ def test_string_concatenation():
     assert isinstance(evaluated, obj.String), f"evaluated object is not String, got={type(evaluated)}"
     assert evaluated.value == 'Hello World!', f"String has wrong value, got={evaluated.value}"
 
+def test_builtin_functions():
+    class EvalBuiltinFunctionTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: any = expected
+    tests: List[EvalBuiltinFunctionTest] = [
+        EvalBuiltinFunctionTest('len("")', 0),
+        EvalBuiltinFunctionTest('len("four")', 4),
+        EvalBuiltinFunctionTest('len("hello world")', 11),
+        EvalBuiltinFunctionTest('len(1)', "argument to 'len' not supported, got=ObjectTypeEnum.INTEGER_OBJ"),
+        EvalBuiltinFunctionTest('len("one", "two")', "wrong number of arguments. got=2, want=1"),
+    ]
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        expected_type = type(t.expected)
+        if expected_type == int:
+            _test_integer_object(evaluated, t.expected)
+        elif expected_type == str:
+            assert type(evaluated) == obj.Error, f"object is not Error. got={type(evaluated)}"
+            assert evaluated.message == t.expected, f"wrong error message. expected={t.expected}, got={evaluated.message}"
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)

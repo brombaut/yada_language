@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List
+from typing import Callable, List
 import yada_ast as ast
 from enum import Enum
 
@@ -11,6 +11,7 @@ class ObjectTypeEnum(Enum):
     ERROR_OBJ = "ERROR"
     FUNCTION_OBJ = "FUNCTION"
     STRING_OBJ = "STRING"
+    BUILTIN_OBJ = "BUILTIN"
 
 
 class Object(ABC):
@@ -60,11 +61,10 @@ class String(Object):
         return self.value
 
 class Null(Object):
-    value: bool
 
-    def __init__(self, value: bool):
-        self.value = value
-    
+    def __init__(self):
+        pass
+
     def type(self) -> str:
         return ObjectTypeEnum.NULL_OBJ
 
@@ -147,3 +147,17 @@ class Function(Object):
     def inspect(self) -> str:
         params = [p.string for p in self.parameters]
         return f"fn({','.join(params)}) {{ \n{self.body.string()}\n}}"
+
+
+
+class Builtin(Object):
+    fn: Callable[..., Object]
+
+    def __init__(self, fn: Callable[..., Object]):
+        self.fn = fn
+
+    def type(self) -> str:
+        return ObjectTypeEnum.BUILTIN_OBJ
+
+    def inspect(self) -> str:
+        return "builtin function"

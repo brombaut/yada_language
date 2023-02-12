@@ -4,7 +4,21 @@ from typing import Callable, Dict, List
 
 TRUE = obj.Boolean(True)
 FALSE = obj.Boolean(False)
-NULL = obj.Null
+NULL = obj.Null()
+
+def builtin_len(*args: List[obj.Object]) -> obj.Object:
+    if len(args) != 1:
+        return new_error(f"wrong number of arguments. got={len(args)}, want=1")
+    arg = args[0]
+    arg_type = type(arg)
+    if arg_type == obj.String:
+        return obj.Integer(len(arg.value))
+    else:
+        return new_error(f"argument to 'len' not supported, got={arg.type()}")
+
+BUILTINS: Dict[str, obj.Builtin] = {
+    "len": obj.Builtin(builtin_len)
+}
 
 def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
     node_type = type(node)
@@ -200,16 +214,25 @@ def eval_if_expression(ie: ast.IfExpression, env: obj.Environment) -> obj.Object
 def eval_identifier(node: ast.Identifier, env: obj.Environment) -> obj.Object:
     try:
         val = env.get(node.value)
-    except:
-        return new_error(f"identifier not found: {node.value}")
-    return val
+        return val
+    except: pass
+    try:
+        builtin = BUILTINS[node.value]
+        return builtin
+    except: pass
+    return new_error(f"identifier not found: {node.value}")
 
 def apply_function(fn: obj.Object, args: List[obj.Object]) -> obj.Object:
-    if type(fn) is not obj.Function:
-        raise Exception(f"not a function: {fn.type()}")
-    extended_env = extend_function_env(fn, args)
-    evaluated = Eval(fn.body, extended_env)
-    return unwrap_return_value(evaluated)
+    fn_type = type(fn)
+    if fn_type == obj.Function:
+        extended_env = extend_function_env(fn, args)
+        evaluated = Eval(fn.body, extended_env)
+        return unwrap_return_value(evaluated)
+    elif fn_type == obj.Builtin:
+        return fn.fn(*args)
+    else:
+        return new_error(f"not a function: {fn.type()}")
+        # raise Exception(f"not a function: {fn.type()}")
     
 def extend_function_env(fn: obj.Object, args: List[obj.Object]) -> obj.Environment:
     env = obj.new_enclosed_environment(fn.env)
