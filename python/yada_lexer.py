@@ -67,6 +67,11 @@ class Lexer:
         
         elif self.char == '}':
             tok = self._new_token(TokenEnum.RBRACE, self.char)
+
+        elif self.char == '[':
+            tok = self._new_token(TokenEnum.LBRACKET, self.char)
+        elif self.char == ']':
+            tok = self._new_token(TokenEnum.RBRACKET, self.char)
         
         elif self.char == '"':
             tok = self._new_token(TokenEnum.STRING, self._read_string())

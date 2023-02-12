@@ -26,6 +26,7 @@ def test_next_token():
     10 != 9;
     "foobar"
     "foo bar"
+    [1, 2];
     """
 
     expected_tokens: List[Token] = [
@@ -108,6 +109,13 @@ def test_next_token():
 
         Token(TokenEnum.STRING, "foobar"),
         Token(TokenEnum.STRING, "foo bar"),
+
+        Token(TokenEnum.LBRACKET, "["),
+        Token(TokenEnum.INT, "1"),
+        Token(TokenEnum.COMMA, ","),
+        Token(TokenEnum.INT, "2"),
+        Token(TokenEnum.RBRACKET, "]"),
+        Token(TokenEnum.SEMICOLON, ";"),
 
         Token(TokenEnum.EOF, "")
     ]
