@@ -13,6 +13,7 @@ class ParsePrecedence(Enum):
     PRODUCT = 4 # *
     PREFIX = 5 # -X or !X
     CALL = 6 # foo(X)
+    INDEX = 7 # array[index] - NOTE that we need to keep this as our highest precendence
 
 PRECEDENCES = {
     TokenEnum.EQ: ParsePrecedence.EQUALS,
@@ -24,6 +25,7 @@ PRECEDENCES = {
     TokenEnum.SLASH: ParsePrecedence.PRODUCT,
     TokenEnum.ASTERISK: ParsePrecedence.PRODUCT,
     TokenEnum.LPAREN: ParsePrecedence.CALL,
+    TokenEnum.LBRACKET: ParsePrecedence.INDEX,
 }
 
 class Parser():
@@ -65,6 +67,7 @@ class Parser():
         self._register_infix(TokenEnum.LT, self._parse_infix_expression)
         self._register_infix(TokenEnum.GT, self._parse_infix_expression)
         self._register_infix(TokenEnum.LPAREN, self._parse_call_expression)
+        self._register_infix(TokenEnum.LBRACKET, self._parse_index_expression)
 
         self.next_token()
         self.next_token()
@@ -243,6 +246,14 @@ class Parser():
         token = self.curr_token
         arguments = self._parse_expression_list(TokenEnum.RPAREN)
         return ast.CallExpression(token, function, arguments)
+    
+    def _parse_index_expression(self, left: ast.Expression) -> ast.Expression | None:
+        token = self.curr_token
+        self.next_token()
+        index = self._parse_expression(ParsePrecedence.LOWEST)
+        if not self._expect_peek(TokenEnum.RBRACKET):
+            return None
+        return ast.IndexExpression(token, left, index)
     
     def _parse_expression_list(self, end: TokenEnum) -> List[ast.Expression]:
         exp_list: List[ast.Expression] = list()

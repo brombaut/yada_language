@@ -261,3 +261,19 @@ class ArrayLiteral(Expression):
     def string(self) -> str:
         els = [e.string() for e in self.elements]
         return f"[{', '.join(els)}]"
+    
+class IndexExpression(Expression):
+    token: Token
+    left: Expression
+    index: Expression
+
+    def __init__(self, token: Token, left: Expression, index: Expression):
+        self.token = token
+        self.left = left
+        self.index = index
+
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        return f"({self.left.string()}[{self.index.string()}])"

@@ -228,6 +228,14 @@ def test_operator_precedence_parsing():
         OperatorPrecedenceTest("a + add(b * c) + d", "((a + add((b * c))) + d)"),
         OperatorPrecedenceTest("add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"),
         OperatorPrecedenceTest("add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"),
+        OperatorPrecedenceTest(
+            "a * [1, 2, 3, 4][b * c] * d",
+            "((a * ([1, 2, 3, 4][(b * c)])) * d)"
+        ),
+        OperatorPrecedenceTest(
+            "add(a * b[2], b[1], 2 * [1, 2][1])",
+            "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"
+        )
     ]
 
     for opt in operator_precedence_tests:
@@ -370,6 +378,21 @@ def test_parsing_array_literals():
     _test_integer_literal(array_exp.elements[0], 1)
     _test_infix_expression(array_exp.elements[1], 2, "*", 2)
     _test_infix_expression(array_exp.elements[2], 3, "+", 3)
+
+def test_parsing_index_expressions():
+    input = "my_array[1 + 1]"
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    index_exp = stmt.expression
+    assert isinstance(index_exp, ast.IndexExpression), f"stmt.exp is not a IndexExpression, got={type(index_exp)}"
+    _test_identifier(index_exp.left, "my_array")
+    _test_infix_expression(index_exp.index, 1, "+", 1)
 
 def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
     assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"
