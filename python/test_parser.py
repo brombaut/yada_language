@@ -354,6 +354,23 @@ def test_call_expression():
     _test_infix_expression(call_exp.arguments[1], 2, "*", 3)
     _test_infix_expression(call_exp.arguments[2], 4, "+", 5)
 
+def test_parsing_array_literals():
+    input = "[1, 2 * 2, 3 + 3]"
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    array_exp = stmt.expression
+    assert isinstance(array_exp, ast.ArrayLiteral), f"stmt.exp is not a ArrayLiteral, got={type(array_exp)}"
+    assert len(array_exp.elements) == 3, f"len(array_exp.elements) not 3, got={len(array_exp.elements)}"
+    _test_integer_literal(array_exp.elements[0], 1)
+    _test_infix_expression(array_exp.elements[1], 2, "*", 2)
+    _test_infix_expression(array_exp.elements[2], 3, "+", 3)
+
 def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
     assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"
     assert _test_literal_expression(exp.left, left)
