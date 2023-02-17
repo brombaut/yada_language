@@ -11,13 +11,68 @@ def builtin_len(*args: List[obj.Object]) -> obj.Object:
         return new_error(f"wrong number of arguments. got={len(args)}, want=1")
     arg = args[0]
     arg_type = type(arg)
+    if arg_type == obj.Array:
+        return obj.Integer(len(arg.elements))
     if arg_type == obj.String:
         return obj.Integer(len(arg.value))
     else:
         return new_error(f"argument to 'len' not supported, got={arg.type()}")
 
+def builtin_first(*args: List[obj.Object]) -> obj.Object:
+    if len(args) != 1:
+        return new_error(f"wrong number of arguments. got={len(args)}, want=1")
+    arg = args[0]
+    arg_type = type(arg)
+    if arg_type != obj.Array:
+        return new_error(f"argument to 'first' must be ARRAY, got={arg.type()}")
+    if len(arg.elements) > 0:
+        return arg.elements[0]
+    return None # TODO: Should this be NULL?
+
+def builtin_last(*args: List[obj.Object]) -> obj.Object:
+    if len(args) != 1:
+        return new_error(f"wrong number of arguments. got={len(args)}, want=1")
+    arg = args[0]
+    arg_type = type(arg)
+    if arg_type != obj.Array:
+        return new_error(f"argument to 'last' must be ARRAY, got={arg.type()}")
+    length = len(arg.elements)
+    if length > 0:
+        return arg.elements[length - 1]
+    return None # TODO: Should this be NULL?
+
+
+def builtin_rest(*args: List[obj.Object]) -> obj.Object:
+    if len(args) != 1:
+        return new_error(f"wrong number of arguments. got={len(args)}, want=1")
+    arg = args[0]
+    arg_type = type(arg)
+    if arg_type != obj.Array:
+        return new_error(f"argument to 'rest' must be ARRAY, got={arg.type()}")
+    length = len(arg.elements)
+    if length > 0:
+        els = [e for e in arg.elements[1:]]
+        return obj.Array(els)
+    return None # TODO: Should this be NULL?
+
+def builtin_push(*args: List[obj.Object]) -> obj.Object:
+    if len(args) != 2:
+        return new_error(f"wrong number of arguments. got={len(args)}, want=1")
+    arr = args[0]
+    arg_type = type(arr)
+    if arg_type != obj.Array:
+        return new_error(f"argument to 'push' must be ARRAY, got={arr.type()}")
+    
+    els = [e for e in arr.elements]
+    els.append(args[1])
+    return obj.Array(els)
+
 BUILTINS: Dict[str, obj.Builtin] = {
-    "len": obj.Builtin(builtin_len)
+    "len": obj.Builtin(builtin_len),
+    "first": obj.Builtin(builtin_first),
+    "last": obj.Builtin(builtin_last),
+    "rest": obj.Builtin(builtin_rest),
+    "push": obj.Builtin(builtin_push),
 }
 
 def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:

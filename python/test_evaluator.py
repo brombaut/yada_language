@@ -239,15 +239,36 @@ def test_builtin_functions():
         EvalBuiltinFunctionTest('len("hello world")', 11),
         EvalBuiltinFunctionTest('len(1)', "argument to 'len' not supported, got=ObjectTypeEnum.INTEGER_OBJ"),
         EvalBuiltinFunctionTest('len("one", "two")', "wrong number of arguments. got=2, want=1"),
+        EvalBuiltinFunctionTest("first([1, 2, 3])", 1),
+        EvalBuiltinFunctionTest("first([])", None),
+        EvalBuiltinFunctionTest("first(1)", "argument to 'first' must be ARRAY, got=ObjectTypeEnum.INTEGER_OBJ"),
+        EvalBuiltinFunctionTest("last([1, 2, 3])", 3),
+        EvalBuiltinFunctionTest("last([])", None),
+        EvalBuiltinFunctionTest("last(1)", "argument to 'last' must be ARRAY, got=ObjectTypeEnum.INTEGER_OBJ"),
+        EvalBuiltinFunctionTest("rest([1, 2, 3])", [2, 3]),
+        EvalBuiltinFunctionTest("rest([1])", []),
+        EvalBuiltinFunctionTest("rest([])", None),
+        EvalBuiltinFunctionTest("push([], 1)", [1]),
+        EvalBuiltinFunctionTest("push(1, 1)", "argument to 'push' must be ARRAY, got=ObjectTypeEnum.INTEGER_OBJ"),
     ]
     for t in tests:
         evaluated = _test_eval(t.input)
+        if t.expected is None:
+            _test_null_object(evaluated)
+            continue
         expected_type = type(t.expected)
         if expected_type == int:
             _test_integer_object(evaluated, t.expected)
         elif expected_type == str:
             assert type(evaluated) == obj.Error, f"object is not Error. got={type(evaluated)}"
             assert evaluated.message == t.expected, f"wrong error message. expected={t.expected}, got={evaluated.message}"
+        elif expected_type == list:
+            assert type(evaluated) == obj.Array, f"object is not ARRAY. got={type(evaluated)}"
+            assert len(evaluated.elements) == len(t.expected), f"array has wrong number of elements, got={len(evaluated.elements)} want={len(t.expected)}"
+            for i in range(len(t.expected)):
+                _test_integer_object(evaluated.elements[i], t.expected[i])
+        else:
+            raise Exception("Unkown expected type")
 
 def test_array_literals():
     input = "[1, 2 * 2, 3 + 3]"
