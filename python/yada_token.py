@@ -25,6 +25,7 @@ class TokenEnum(Enum):
     # Delimiters
     COMMA = ","
     SEMICOLON = ";"
+    COLON = ":"
 
     LPAREN = "("
     RPAREN = ")"

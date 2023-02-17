@@ -27,6 +27,7 @@ def test_next_token():
     "foobar"
     "foo bar"
     [1, 2];
+    {"foo": "bar"}
     """
 
     expected_tokens: List[Token] = [
@@ -116,6 +117,12 @@ def test_next_token():
         Token(TokenEnum.INT, "2"),
         Token(TokenEnum.RBRACKET, "]"),
         Token(TokenEnum.SEMICOLON, ";"),
+
+        Token(TokenEnum.LBRACE, "{"),
+        Token(TokenEnum.STRING, "foo"),
+        Token(TokenEnum.COLON, ":"),
+        Token(TokenEnum.STRING, "bar"),
+        Token(TokenEnum.RBRACE, "}"),
 
         Token(TokenEnum.EOF, "")
     ]

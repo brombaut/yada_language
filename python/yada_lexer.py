@@ -52,6 +52,9 @@ class Lexer:
         
         elif self.char == ';':
             tok = self._new_token(TokenEnum.SEMICOLON, self.char)
+
+        elif self.char == ':':
+            tok = self._new_token(TokenEnum.COLON, self.char)
         
         elif self.char == ',':
             tok = self._new_token(TokenEnum.COMMA, self.char)
