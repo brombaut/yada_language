@@ -88,6 +88,12 @@ def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
             return right
         return eval_infix_expression(node.operator, left, right)
     
+    elif node_type == ast.ArrayLiteral:
+        elements = eval_expressions(node.elements, env)
+        if len(elements) == 1 and is_error(elements[0]):
+            return elements[0]
+        return obj.Array(elements)
+
     return None
 
 def eval_program(program: ast.Program, env: obj.Environment) -> obj.Object:

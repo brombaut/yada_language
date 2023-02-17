@@ -12,6 +12,7 @@ class ObjectTypeEnum(Enum):
     FUNCTION_OBJ = "FUNCTION"
     STRING_OBJ = "STRING"
     BUILTIN_OBJ = "BUILTIN"
+    ARRAY_OBJ = "ARRAY"
 
 
 class Object(ABC):
@@ -161,3 +162,16 @@ class Builtin(Object):
 
     def inspect(self) -> str:
         return "builtin function"
+    
+class Array(Object):
+    elements: List[Object]
+
+    def __init__(self, els: List[Object]):
+        self.elements = els
+
+    def type(self) -> str:
+        return ObjectTypeEnum.ARRAY_OBJ
+
+    def inspect(self) -> str:
+        els = [e.string() for e in self.elements]
+        return f"[{', '.join(els)}]"

@@ -249,6 +249,15 @@ def test_builtin_functions():
             assert type(evaluated) == obj.Error, f"object is not Error. got={type(evaluated)}"
             assert evaluated.message == t.expected, f"wrong error message. expected={t.expected}, got={evaluated.message}"
 
+def test_array_literals():
+    input = "[1, 2 * 2, 3 + 3]"
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, obj.Array), f"evaluated object is not Array, got={type(evaluated)}"
+    assert len(evaluated.elements) == 3, f"array has wrong number of elements, git={len(evaluated.elements)}"
+    _test_integer_object(evaluated.elements[0], 1)
+    _test_integer_object(evaluated.elements[1], 4)
+    _test_integer_object(evaluated.elements[2], 6)
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)
