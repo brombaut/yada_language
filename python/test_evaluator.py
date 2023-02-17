@@ -258,6 +258,31 @@ def test_array_literals():
     _test_integer_object(evaluated.elements[1], 4)
     _test_integer_object(evaluated.elements[2], 6)
 
+def test_array_index_expressions():
+    class EvalArrayIndexExpressionTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: any = expected
+    tests: List[EvalArrayIndexExpressionTest] = [
+        EvalArrayIndexExpressionTest("[1, 2, 3][0]", 1),
+        EvalArrayIndexExpressionTest("[1, 2, 3][1]", 2),
+        EvalArrayIndexExpressionTest("[1, 2, 3][2]", 3),
+        EvalArrayIndexExpressionTest("let i = 0; [1][i]", 1),
+        EvalArrayIndexExpressionTest("[1, 2, 3][1 + 1]", 3),
+        EvalArrayIndexExpressionTest("let my_array = [1, 2, 3]; my_array[2]", 3),
+        EvalArrayIndexExpressionTest("let my_array = [1, 2, 3]; my_array[0] + my_array[1] + my_array[2];", 6),
+        EvalArrayIndexExpressionTest("let my_array = [1, 2, 3]; let i = my_array[0]; my_array[i]", 2),
+        EvalArrayIndexExpressionTest("[1, 2, 3][3]", None),
+        EvalArrayIndexExpressionTest("[1, 2, 3][-1]", None),
+    ]
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        expected_type = type(t.expected)
+        if expected_type == int:
+            _test_integer_object(evaluated, t.expected)
+        else:
+            _test_null_object(evaluated)
+
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
     parser = Parser(lexer)

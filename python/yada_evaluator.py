@@ -93,6 +93,15 @@ def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
         if len(elements) == 1 and is_error(elements[0]):
             return elements[0]
         return obj.Array(elements)
+    
+    elif node_type == ast.IndexExpression:
+        left = Eval(node.left, env)
+        if (is_error(left)):
+            return left
+        index = Eval(node.index, env)
+        if (is_error(index)):
+            return right
+        return eval_index_expression(left, index)
 
     return None
 
@@ -161,6 +170,19 @@ def eval_infix_expression(operator: str, left: obj.Object, right: obj.Object) ->
     else:
         return new_error(f"unknown operator: {left.type()} {operator} {right.type()}")
     
+def eval_index_expression(left: obj.Object, index: obj.Object) -> obj.Object:
+    if left.type() == obj.ObjectTypeEnum.ARRAY_OBJ and index.type() == obj.ObjectTypeEnum.INTEGER_OBJ:
+        return eval_array_index_expression(left, index)
+    else:
+        return new_error(f"index operator not supported: {left.type()}")
+
+def eval_array_index_expression(left: obj.Array, index: obj.Integer) -> obj.Object:
+    idx = index.value
+    max_idx = len(left.elements) - 1
+    if idx < 0 or idx > max_idx:
+        return None # TODO: Should this return NULL?
+    return left.elements[idx]
+
 def eval_bang_operator_expression(right: obj.Object) -> obj.Object:
     if right == TRUE:
         return FALSE
