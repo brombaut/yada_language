@@ -157,6 +157,9 @@ def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
         if (is_error(index)):
             return right
         return eval_index_expression(left, index)
+    
+    elif node_type == ast.HashLiteral:
+        return eval_hash_literal(node, env)
 
     return None
 
@@ -237,6 +240,21 @@ def eval_array_index_expression(left: obj.Array, index: obj.Integer) -> obj.Obje
     if idx < 0 or idx > max_idx:
         return None # TODO: Should this return NULL?
     return left.elements[idx]
+
+def eval_hash_literal(node: ast.HashLiteral, env: obj.Environment) -> obj.Object:
+    pairs: Dict[obj.HashKey, obj.HashPair] = dict()
+    for k_node, v_node in node.pairs.items():
+        key = Eval(k_node, env)
+        if is_error(key):
+            return key
+        if not isinstance(key, obj.Hashable):
+            return new_error(f"unusable as hash key: {key.type()}")
+        value = Eval(v_node, env)
+        if is_error(value):
+            return value
+        hashed = key.hash_key()
+        pairs[hashed] = obj.HashPair(key, value)
+    return obj.Hash(pairs)
 
 def eval_bang_operator_expression(right: obj.Object) -> obj.Object:
     if right == TRUE:

@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List
 from yada_evaluator import Eval
 from yada_lexer import Lexer
 from yada_parser import Parser
@@ -303,6 +303,35 @@ def test_array_index_expressions():
             _test_integer_object(evaluated, t.expected)
         else:
             _test_null_object(evaluated)
+
+def test_hash_literals():
+    input = """
+    let two = "two";
+    {
+        "one": 10 - 9,
+        two: 1 + 1,
+        "thr" + "ee": 6 / 2,
+        4: 4,
+        true: 5,
+        false: 6,
+    };
+    """
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, obj.Hash), f"evaluated object is not Hash, got={type(evaluated)}"
+    expected: Dict[obj.HashKey, int] = {
+        obj.String("one").hash_key(): 1,
+        obj.String("two").hash_key(): 2,
+        obj.String("three").hash_key(): 3,
+        obj.Integer(4).hash_key(): 4,
+        obj.Boolean(True).hash_key(): 5,
+        obj.Boolean(False).hash_key(): 6,
+    }
+    assert len(evaluated.pairs) == len(expected), f"Hash has wrong num of pairs, got={len(evaluated.pairs)}"
+    for k_expected, v_expecetd in expected.items():
+        assert k_expected in evaluated.pairs, f"no pair for given key in pairs, key={k_expected}"
+        pair = evaluated.pairs[k_expected]
+        _test_integer_object(pair.value, v_expecetd)
+
 
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)

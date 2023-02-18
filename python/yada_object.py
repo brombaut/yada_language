@@ -31,6 +31,9 @@ class HashKey(object):
 
     def __ne__(self, other):
         return not (self == other)
+    
+    def __hash__(self):
+        return hash((self.type, self.value))
 
 class Hashable(ABC):
     def hash_key(self) -> HashKey:
