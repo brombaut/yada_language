@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable, List
+from typing import Callable, Dict, List
 import yada_ast as ast
 from enum import Enum
 
@@ -13,6 +13,7 @@ class ObjectTypeEnum(Enum):
     STRING_OBJ = "STRING"
     BUILTIN_OBJ = "BUILTIN"
     ARRAY_OBJ = "ARRAY"
+    HASH_OBJ = "HASH"
 
 
 class HashKey(object):
@@ -31,14 +32,18 @@ class HashKey(object):
     def __ne__(self, other):
         return not (self == other)
 
+class Hashable(ABC):
+    def hash_key(self) -> HashKey:
+        raise Exception("Method not implemented")
+
 class Object(ABC):
     def type(self) -> str:
-        raise Exception("Method not implements")
+        raise Exception("Method not implemented")
 
     def inspect(self) -> str:
-        raise Exception("Method not implements")
+        raise Exception("Method not implemented")
 
-class Integer(Object):
+class Integer(Object, Hashable):
     value: int
 
     def __init__(self, value: int):
@@ -53,7 +58,7 @@ class Integer(Object):
     def hash_key(self) -> HashKey:
         return HashKey(self.type(), self.value)
 
-class Boolean(Object):
+class Boolean(Object, Hashable):
     value: bool
 
     def __init__(self, value: bool):
@@ -71,7 +76,7 @@ class Boolean(Object):
     def hash_key(self) -> HashKey:
         return HashKey(self.type(), 1 if self.value else 0)
 
-class String(Object):
+class String(Object, Hashable):
     value: str
 
     def __init__(self, value: str):
@@ -200,3 +205,24 @@ class Array(Object):
     def inspect(self) -> str:
         els = [e.string() for e in self.elements]
         return f"[{', '.join(els)}]"
+    
+class HashPair():
+    key: Object
+    value: Object
+
+    def __init__(self, key: Object, value: Object):
+        self.key = key
+        self.value = value
+
+class Hash():
+    pairs: Dict[HashKey, HashPair]
+
+    def __init__(self, pairs: Dict[HashKey, HashPair]):
+        self.pairs = pairs
+
+    def type(self) -> str:
+        return ObjectTypeEnum.HASH_OBJ
+
+    def inspect(self) -> str:
+        prs = [f"{p.key.inspect}: {p.value.inspect()}" for p in self.pairs]
+        return f"{{{', '.join(prs)}}}"
