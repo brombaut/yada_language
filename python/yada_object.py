@@ -15,6 +15,22 @@ class ObjectTypeEnum(Enum):
     ARRAY_OBJ = "ARRAY"
 
 
+class HashKey(object):
+    type: ObjectTypeEnum
+    value: int
+
+    def __init__(self, type: ObjectTypeEnum, value: int):
+        self.type = type
+        self.value = value
+
+    def __eq__(self, other):
+        return type(other) == HashKey and \
+            self.type == other.type and \
+            self.value == other.value   
+
+    def __ne__(self, other):
+        return not (self == other)
+
 class Object(ABC):
     def type(self) -> str:
         raise Exception("Method not implements")
@@ -33,6 +49,9 @@ class Integer(Object):
 
     def inspect(self) -> str:
         return f"{self.value}"
+    
+    def hash_key(self) -> HashKey:
+        return HashKey(self.type(), self.value)
 
 class Boolean(Object):
     value: bool
@@ -48,6 +67,9 @@ class Boolean(Object):
             return "true"
         else:
             return "false"
+        
+    def hash_key(self) -> HashKey:
+        return HashKey(self.type(), 1 if self.value else 0)
 
 class String(Object):
     value: str
@@ -60,6 +82,9 @@ class String(Object):
 
     def inspect(self) -> str:
         return self.value
+    
+    def hash_key(self) -> HashKey:
+        return HashKey(self.type(), hash(self.value))
 
 class Null(Object):
 
