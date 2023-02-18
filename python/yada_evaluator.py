@@ -67,12 +67,18 @@ def builtin_push(*args: List[obj.Object]) -> obj.Object:
     els.append(args[1])
     return obj.Array(els)
 
+def builtin_puts(*args: List[obj.Object]) -> obj.Object:
+    for a in args:
+        print(a.inspect())
+    return NULL
+
 BUILTINS: Dict[str, obj.Builtin] = {
     "len": obj.Builtin(builtin_len),
     "first": obj.Builtin(builtin_first),
     "last": obj.Builtin(builtin_last),
     "rest": obj.Builtin(builtin_rest),
     "push": obj.Builtin(builtin_push),
+    "puts": obj.Builtin(builtin_puts),
 }
 
 def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:

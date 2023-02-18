@@ -179,7 +179,7 @@ class Function(Object):
         return ObjectTypeEnum.FUNCTION_OBJ
 
     def inspect(self) -> str:
-        params = [p.string for p in self.parameters]
+        params = [p.string() for p in self.parameters]
         return f"fn({','.join(params)}) {{ \n{self.body.string()}\n}}"
 
 
