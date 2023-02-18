@@ -155,7 +155,7 @@ def Eval(node: ast.Node, env: obj.Environment) -> obj.Object:
             return left
         index = Eval(node.index, env)
         if (is_error(index)):
-            return right
+            return index
         return eval_index_expression(left, index)
     
     elif node_type == ast.HashLiteral:
@@ -231,6 +231,8 @@ def eval_infix_expression(operator: str, left: obj.Object, right: obj.Object) ->
 def eval_index_expression(left: obj.Object, index: obj.Object) -> obj.Object:
     if left.type() == obj.ObjectTypeEnum.ARRAY_OBJ and index.type() == obj.ObjectTypeEnum.INTEGER_OBJ:
         return eval_array_index_expression(left, index)
+    elif left.type() == obj.ObjectTypeEnum.HASH_OBJ:
+        return eval_hash_index_expression(left, index)
     else:
         return new_error(f"index operator not supported: {left.type()}")
 
@@ -255,6 +257,14 @@ def eval_hash_literal(node: ast.HashLiteral, env: obj.Environment) -> obj.Object
         hashed = key.hash_key()
         pairs[hashed] = obj.HashPair(key, value)
     return obj.Hash(pairs)
+
+def eval_hash_index_expression(left: obj.Hash, index: obj.Integer) -> obj.Object:
+    if not isinstance(index, obj.Hashable): 
+        return new_error(f"unusable as hash key: {index.type()}")
+    if index.hash_key() not in left.pairs:
+        return None # TODO: Should this return NULL?
+    pair: obj.HashPair = left.pairs[index.hash_key()]
+    return pair.value
 
 def eval_bang_operator_expression(right: obj.Object) -> obj.Object:
     if right == TRUE:

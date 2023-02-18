@@ -154,6 +154,7 @@ def test_error_handling():
         """, "unknown operator: ObjectTypeEnum.BOOLEAN_OBJ + ObjectTypeEnum.BOOLEAN_OBJ"),
         EvalErrorHandlingTest("foobar", "identifier not found: foobar"),
         EvalErrorHandlingTest('"Hello" - "World"', "unknown operator: ObjectTypeEnum.STRING_OBJ - ObjectTypeEnum.STRING_OBJ"),
+        EvalErrorHandlingTest('{"name": "yada"}[fn(x) { x }];', "unusable as hash key: ObjectTypeEnum.FUNCTION_OBJ"),
     ]
 
     for t in tests:
@@ -332,6 +333,28 @@ def test_hash_literals():
         pair = evaluated.pairs[k_expected]
         _test_integer_object(pair.value, v_expecetd)
 
+
+def test_hash_index_expressions():
+    class EvalHasIndexExpressionTest:
+        def __init__(self, input, expected):
+            self.input: str = input
+            self.expected: any = expected
+    tests: List[EvalHasIndexExpressionTest] = [
+        EvalHasIndexExpressionTest('{"foo": 5}["foo"]', 5),
+        EvalHasIndexExpressionTest('{"foo": 5}["bar"]', None),
+        EvalHasIndexExpressionTest('let key = "foo"; {"foo": 5}[key]', 5),
+        EvalHasIndexExpressionTest('{}["foo"]', None),
+        EvalHasIndexExpressionTest('{5: 5}[5]', 5),
+        EvalHasIndexExpressionTest('{true: 5}[true]', 5),
+        EvalHasIndexExpressionTest('{false: 5}[false]', 5),
+    ]
+    for t in tests:
+        evaluated = _test_eval(t.input)
+        expected_type = type(t.expected)
+        if expected_type == int:
+            _test_integer_object(evaluated, t.expected)
+        else:
+            _test_null_object(evaluated)
 
 def _test_eval(inp: str) -> obj.Object:
     lexer = Lexer(inp)
