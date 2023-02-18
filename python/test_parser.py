@@ -394,6 +394,67 @@ def test_parsing_index_expressions():
     _test_identifier(index_exp.left, "my_array")
     _test_infix_expression(index_exp.index, 1, "+", 1)
 
+def test_parsing_hash_literal_string_keys():
+    input = '{"one": 1, "two": 2, "three": 3}'
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    hash_literal = stmt.expression
+    assert isinstance(hash_literal, ast.HashLiteral), f"stmt.exp is not a HashLiteral, got={type(hash_literal)}"
+    assert len(hash_literal.pairs) == 3, f"has.pairs has wrong length, got={len(hash_literal.pairs)}"
+    expected = {
+        "one": 1, 
+        "two": 2,
+        "three": 3,
+    }
+    for k, v in hash_literal.pairs.items():
+        assert isinstance(k, ast.StringLiteral), f"key is not StringLiteral, got={type(k)}"
+        expected_value = expected[k.string()]
+        _test_integer_literal(v, expected_value)
+
+def test_parsing_empty_hash_literal():
+    input = "{}"
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    hash_literal = stmt.expression
+    assert isinstance(hash_literal, ast.HashLiteral), f"stmt.exp is not a HashLiteral, got={type(hash_literal)}"
+    assert len(hash_literal.pairs) == 0, f"has.pairs has wrong length, got={len(hash_literal.pairs)}"
+
+def test_parsing_hash_literal_expressions():
+    input = '{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}'
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program: ast.Program = parser.parse_program()
+    check_parse_errors(parser)
+
+    assert len(program.statements) == 1, f"program.statements does not contain 1 statements. got={len(program.statements)}"
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement), f"stmt is not a ExpressionStatement, got={type(stmt)}"
+    hash_literal = stmt.expression
+    assert isinstance(hash_literal, ast.HashLiteral), f"stmt.exp is not a HashLiteral, got={type(hash_literal)}"
+    assert len(hash_literal.pairs) == 3, f"has.pairs has wrong length, got={len(hash_literal.pairs)}"
+    tests = {
+        "one": lambda e: _test_infix_expression(e, 0, "+", 1),
+        "two": lambda e: _test_infix_expression(e, 10, "-", 8),
+        "three": lambda e: _test_infix_expression(e, 15, "/", 5),
+    }
+    for k, v in hash_literal.pairs.items():
+        assert isinstance(k, ast.StringLiteral), f"key is not StringLiteral, got={type(k)}"
+        assert k.string() in tests, f"No test function for key {k.string()}"
+        test_func = tests[k.string()]
+        test_func(v)
+
 def _test_infix_expression(exp: ast.Expression, left, operator: str, right) -> bool:
     assert isinstance(exp, ast.InfixExpression), f"exp is not an InfixExpression, got={type(exp)}"
     assert _test_literal_expression(exp.left, left)

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Union
+from typing import Dict, List, Union
 from yada_token import Token
 
 class Node(ABC):
@@ -277,3 +277,21 @@ class IndexExpression(Expression):
 
     def string(self) -> str:
         return f"({self.left.string()}[{self.index.string()}])"
+
+
+class HashLiteral(Expression):
+    token: Token
+    pairs: Dict[Expression, Expression]
+
+    def __init__(self, token: Token, pairs: Dict[Expression, Expression]):
+        self.token = token
+        self.pairs = pairs
+    
+    def token_literal(self) -> str:
+        return self.token.literal
+
+    def string(self) -> str:
+        ps = list()
+        for k, v in self.pairs.items():
+            ps.append(f"{k.string()}:{v.string()}")
+        return f"{{{', '.join(ps)}}}"

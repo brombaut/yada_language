@@ -53,6 +53,7 @@ class Parser():
         self._register_prefix(TokenEnum.FALSE, self._parse_boolean)
         self._register_prefix(TokenEnum.LPAREN, self._parse_grouped_expression)
         self._register_prefix(TokenEnum.LBRACKET, self._parse_array_literal)
+        self._register_prefix(TokenEnum.LBRACE, self._parse_hash_literal)
         self._register_prefix(TokenEnum.IF, self._parse_if_expression)
         self._register_prefix(TokenEnum.FUNCTION, self._parse_function_literal)
         self._register_prefix(TokenEnum.STRING, self._parse_string_literal)
@@ -184,6 +185,24 @@ class Parser():
         token = self.curr_token
         els = self._parse_expression_list(TokenEnum.RBRACKET)
         return ast.ArrayLiteral(token, els)
+    
+    def _parse_hash_literal(self) -> ast.Expression | None:
+        token = self.curr_token
+        pairs: Dict[ast.Expression, ast.Expression] = dict()
+
+        while not self._peek_token_is(TokenEnum.RBRACE):
+            self.next_token()
+            key = self._parse_expression(ParsePrecedence.LOWEST)
+            if not self._expect_peek(TokenEnum.COLON):
+                return None
+            self.next_token()
+            value = self._parse_expression(ParsePrecedence.LOWEST)
+            pairs[key] = value
+            if not self._peek_token_is(TokenEnum.RBRACE) and not self._expect_peek(TokenEnum.COMMA):
+                return None
+        if not self._expect_peek(TokenEnum.RBRACE):
+            return None
+        return ast.HashLiteral(token, pairs)
     
     def _parse_if_expression(self) -> ast.Expression | None:
         token = self.curr_token
