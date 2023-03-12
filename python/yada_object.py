@@ -46,6 +46,9 @@ class Object(ABC):
     def inspect(self) -> str:
         raise Exception("Method not implemented")
 
+    def to_json(self):
+        raise Exception("Method not implemented")
+
 class Integer(Object, Hashable):
     value: int
 
@@ -60,6 +63,9 @@ class Integer(Object, Hashable):
     
     def hash_key(self) -> HashKey:
         return HashKey(self.type(), self.value)
+    
+    def to_json(self):
+        return self.value
 
 class Boolean(Object, Hashable):
     value: bool
@@ -78,6 +84,9 @@ class Boolean(Object, Hashable):
         
     def hash_key(self) -> HashKey:
         return HashKey(self.type(), 1 if self.value else 0)
+    
+    def to_json(self):
+        return self.value
 
 class String(Object, Hashable):
     value: str
@@ -93,6 +102,9 @@ class String(Object, Hashable):
     
     def hash_key(self) -> HashKey:
         return HashKey(self.type(), hash(self.value))
+    
+    def to_json(self):
+        return self.value
 
 class Null(Object):
 
@@ -104,6 +116,9 @@ class Null(Object):
 
     def inspect(self) -> str:
         return "null"
+    
+    def to_json(self):
+        return None
 
 class ReturnValue(Object):
     value: Object
@@ -116,6 +131,9 @@ class ReturnValue(Object):
 
     def inspect(self) -> str:
         return self.value.inspect()
+    
+    def to_json(self):
+        return self.value.to_json()
 
 class Error(Object):
     message: str
@@ -129,6 +147,9 @@ class Error(Object):
     def inspect(self) -> str:
         return f"ERROR: {self.message}"
 
+    def to_json(self):
+        return f"ERROR: {self.message}"
+    
 
 class Environment():
     store: dict[str, Object]
@@ -151,6 +172,12 @@ class Environment():
     def set(self, name: str, val: Object) -> Object:
         self.store[name] = val
         return val
+    
+    def to_json(self) -> dict:
+        result = dict()
+        for k, v in self.store.items():
+            result[k] = v.to_json()
+        return result
 
 def new_enclosed_environment(outer: Environment) -> Environment:
     env = new_environment()
@@ -182,7 +209,9 @@ class Function(Object):
         params = [p.string() for p in self.parameters]
         return f"fn({','.join(params)}) {{ \n{self.body.string()}\n}}"
 
-
+    def to_json(self):
+        # TODO: This
+        return "FUNCTION"
 
 class Builtin(Object):
     fn: Callable[..., Object]
@@ -209,6 +238,9 @@ class Array(Object):
         els = [e.string() for e in self.elements]
         return f"[{', '.join(els)}]"
     
+    def to_json(self):
+        return [e.to_json() for e in self.elements]
+    
 class HashPair():
     key: Object
     value: Object
@@ -229,3 +261,10 @@ class Hash():
     def inspect(self) -> str:
         prs = [f"{p.key.inspect}: {p.value.inspect()}" for p in self.pairs]
         return f"{{{', '.join(prs)}}}"
+    
+    def to_json(self):
+        # TODO: This will have to be addressed
+        result = dict()
+        for k, hp in self.pairs.items():
+            result[k] = hp.value.to_json()
+        return result

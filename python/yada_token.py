@@ -55,6 +55,12 @@ class Token:
 
     def __str__(self):
         return "{type: " + self.type.value + ", literal: " + self.literal + "}"
+    
+    def to_json(self):
+        return {
+            "type": self.type.value,
+            "literal": self.literal
+        }
 
 
 keywords = {

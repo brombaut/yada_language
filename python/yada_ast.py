@@ -4,10 +4,13 @@ from yada_token import Token
 
 class Node(ABC):
     def token_literal(self) -> str:
-        raise Exception("Method not implements")
+        raise Exception("Method not implemented")
 
     def string(self) -> str:
-        raise Exception("Method not implements")
+        raise Exception("Method not implemented")
+
+    def to_json(self) -> dict:
+        raise Exception("Method not implemented")
 
 class Statement(Node):
     pass
@@ -24,6 +27,12 @@ class Program(Node):
         else:
             self.statements = statements
 
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "statements": [s.to_json() for s in self.statements],
+        }
+
     def token_literal(self) -> str:
         if len(self.statements) > 0:
             return self.statements[0].token_literal()
@@ -33,7 +42,7 @@ class Program(Node):
     def string(self) -> str:
         result = ""
         for s in self.statements:
-            result += s.string()
+            result += f"{s.string()}"
         return result
     
     def add_statement(self, stmt: Statement):
@@ -46,6 +55,13 @@ class Identifier(Expression):
     def __init__(self, token: Token, value: str):
         self.token = token
         self.value = value
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "value": self.value,
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -62,6 +78,14 @@ class LetStatement(Statement):
         self.token = token
         self.name = name
         self.value = value
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "name": self.name.to_json(),
+            "value": self.value.to_json(),
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -77,6 +101,13 @@ class ReturnStatement(Statement):
     def __init__(self, token: Token, return_value: Expression):
         self.token = token
         self.return_value = return_value
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "return_value": self.return_value.to_json(),
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -92,6 +123,13 @@ class ExpressionStatement(Statement):
     def __init__(self, token: Token, expression: Expression):
         self.token = token
         self.expression = expression
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "expression": self.expression.to_json(),
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -106,6 +144,13 @@ class IntegerLiteral(Expression):
     def __init__(self, token: Token, value: int):
         self.token = token
         self.value = value
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "value": self.value,
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -120,6 +165,13 @@ class Boolean(Expression):
     def __init__(self, token: Token, value: bool):
         self.token = token
         self.value = value
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "value": self.value,
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -136,6 +188,14 @@ class PrefixExpression(Expression):
         self.token = token
         self.operator = operator
         self.right = right
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "operator": self.operator,
+            "right": self.right.to_json(),
+        }
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -155,6 +215,15 @@ class InfixExpression(Expression):
         self.operator = operator
         self.right = right
 
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "left": self.left.to_json(),
+            "operator": self.operator,
+            "right": self.right.to_json(),
+        }
+
     def token_literal(self) -> str:
         return self.token.literal
 
@@ -168,6 +237,13 @@ class BlockStatement(Statement):
     def __init__(self, token: Token, statements: List[Statement]):
         self.token = token
         self.statements = statements
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "statements": [s.to_json() for s in self.statements],
+        }
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -190,6 +266,15 @@ class IfExpression(Expression):
         self.consequence = consequence
         self.alternative = alternative
 
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "condition": self.condition.to_json(),
+            "consequence": self.consequence.to_json(),
+            "alternative": self.alternative.to_json() if self.alternative else None,
+        }
+
     def token_literal(self) -> str:
         return self.token.literal
 
@@ -208,13 +293,21 @@ class FunctionLiteral(Expression):
         self.token = token
         self.parameters = parameters
         self.body = body
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "parameters": [p.to_json() for p in self.parameters],
+            "body": self.body.to_json(),
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
 
     def string(self) -> str:
         params = [p.string() for p in self.parameters]
-        return f"{self.token_literal()}({', '.join(params)}) {self.body.string()}"
+        return f"{self.token_literal()}({', '.join(params)}) {{ {self.body.string()} }}"
 
 class CallExpression(Expression):
     token: Token
@@ -225,6 +318,14 @@ class CallExpression(Expression):
         self.token = token
         self.function = function
         self.arguments = arguments
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "function": self.function.to_json(),
+            "arguments": [a.to_json() for a in self.arguments],
+        }
 
     def token_literal(self) -> str:
         return self.token.literal
@@ -240,6 +341,13 @@ class StringLiteral(Expression):
     def __init__(self, token: Token, value: str):
         self.token = token
         self.value = value
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "value": self.value,
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -254,6 +362,13 @@ class ArrayLiteral(Expression):
     def __init__(self, token: Token, elements: List[Expression]):
         self.token = token
         self.elements = elements
+
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "elements": [e.to_json() for e in self.elements],
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
@@ -272,6 +387,14 @@ class IndexExpression(Expression):
         self.left = left
         self.index = index
 
+    def to_json(self) -> dict:
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "left": self.left.to_json(),
+            "index": self.index.to_json(),
+        }
+
     def token_literal(self) -> str:
         return self.token.literal
 
@@ -286,6 +409,14 @@ class HashLiteral(Expression):
     def __init__(self, token: Token, pairs: Dict[Expression, Expression]):
         self.token = token
         self.pairs = pairs
+
+    def to_json(self) -> dict:
+        # TODO: This
+        return {
+            "node": self.__class__.__name__,
+            "token": self.token.to_json(),
+            "pairs": None,
+        }
     
     def token_literal(self) -> str:
         return self.token.literal
