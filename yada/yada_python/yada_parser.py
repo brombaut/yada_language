@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import Callable, Dict, List
-from yada_lexer import Lexer
-from yada_token import Token, TokenEnum
+from yada.yada_python.yada_lexer import Lexer
+from yada.yada_python.yada_token import Token, TokenEnum
 # from yada_ast import Program, Statement, LetStatement, Identifier, ReturnStatement, ExpressionStatement, Expression, IntegerLiteral
-import yada_ast as ast
+import yada.yada_python.yada_ast as ast
 
 class ParsePrecedence(Enum):
     LOWEST = 0

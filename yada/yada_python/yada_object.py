@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import Callable, Dict, List
-import yada_ast as ast
+import yada.yada_python.yada_ast as ast
 from enum import Enum
 
 class ObjectTypeEnum(Enum):

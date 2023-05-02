@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import Dict, List, Union
-from yada_token import Token
+from yada.yada_python.yada_token import Token
 
 class Node(ABC):
     def token_literal(self) -> str:

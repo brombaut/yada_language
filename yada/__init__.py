@@ -1,1 +1,0 @@
-from yada_python import yada_frontend

@@ -3,12 +3,12 @@ import sys
 
 from io import StringIO
 
-from yada_ast import Program
-from yada_lexer import Lexer
-from yada_parser import Parser
-from yada_token import TokenEnum
-from yada_object import new_environment
-from yada_evaluator import Eval
+from yada.yada_python.yada_ast import Program
+from yada.yada_python.yada_lexer import Lexer
+from yada.yada_python.yada_parser import Parser
+from yada.yada_python.yada_token import TokenEnum
+from yada.yada_python.yada_object import new_environment
+from yada.yada_python.yada_evaluator import Eval
 
 def Yada(input: str):
     l = Lexer(input)

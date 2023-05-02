@@ -1,5 +1,5 @@
-import yada_ast as ast
-import yada_object as obj
+import yada.yada_python.yada_ast as ast
+import yada.yada_python.yada_object as obj
 from typing import Callable, Dict, List
 
 TRUE = obj.Boolean(True)

@@ -1,4 +1,4 @@
-from yada_token import Token, TokenEnum, lookup_ident
+from yada.yada_python.yada_token import Token, TokenEnum, lookup_ident
 
 class Lexer:
     inp: str
